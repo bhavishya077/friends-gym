@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact | Friends Gym</title>
+    <meta name="description" content="Get in touch with Friends Gym for memberships, classes, and coaching." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav class="nav-bar">
+          <a href="index.html" class="brand"><span class="brand-mark"></span> Friends <span class="accent">Gym</span></a>
+          <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+          <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="programs.html">Programs</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="contact.html" class="active">Contact</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 3rem 0 4rem;">
+      <section class="contact-grid reveal">
+        <div>
+          <h1 class="section-title">Ready to start?</h1>
+          <p class="section-subtitle">Visit us for a free trial session or send us a message about your goals.</p>
+          <div class="card">
+            <h3>Contact details</h3>
+            <p>Pno- 72, Sirsi marg, Engineer Colony, Bisnwala, Jaipur, Rajasthan 302034<br />Email: hello@friendsgym.com<br />Phone: +1 (555) 123-4567</p>
+          </div>
+        </div>
+
+        <form id="contact-form">
+          <input id="contact-name" type="text" placeholder="Your name" required />
+          <input id="contact-email" type="email" placeholder="Your email" required />
+          <textarea id="contact-message" placeholder="Tell us about your goals" required></textarea>
+          <button class="btn btn-primary" type="submit">Send message</button>
+          <div id="contact-result" class="result-box">Messages are saved for the gym team.</div>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>© <span id="year"></span> Friends Gym. Built for stronger days.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Friends Gym Mobile App | Fitness Coaching, BMI Tools, and Smart Plans</title>
+    <meta name="description" content="Friends Gym offers modern fitness coaching, video workouts, BMI tools, meal planning, and a fully responsive training experience." />
+    <meta name="keywords" content="gym, fitness, workout tracker, bmi calculator, diet planner, personal training, healthy lifestyle" />
+    <meta name="theme-color" content="#06070b" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://example.com/index.html" />
+    <meta property="og:title" content="Friends Gym | Smart Fitness Experience" />
+    <meta property="og:description" content="Discover a premium fitness website with advanced tools and immersive features." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icons/icon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Gym",
+        "name": "Friends Gym",
+        "description": "A modern gym and fitness website with coaching, workout tracking, BMI tools, and diet planning.",
+        "url": "https://example.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "123 Fitness Avenue",
+          "addressLocality": "Downtown City"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-bar">
+        <a href="#home" class="brand"><span class="brand-mark"></span> Friends <span class="accent">Gym</span></a>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">Light</button>
+        <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+        <div class="nav-links">
+          <a href="#home" class="active">Home</a>
+          <a href="#tools">Tools</a>
+          <a href="#dashboard">Dashboard</a>
+          <a href="#contact">Contact</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="home">
+      <section class="hero container">
+        <div class="hero-copy reveal">
+          <span class="eyebrow">Premium fitness experience</span>
+          <h1>Train smarter with video coaching, smart tools, and real progress.</h1>
+          <p>From immersive video backgrounds to BMI calculations, workout tracking, meal planning, and member access, Friends Gym brings everything together in one powerful fitness experience.</p>
+          <div class="hero-actions">
+            <a href="#tools" class="btn btn-primary">Explore tools</a>
+            <a href="#login" class="btn btn-secondary">Join now</a>
+            <button class="btn btn-secondary install-button" id="install-app" type="button" hidden>Install app</button>
+          </div>
+          <div class="stats">
+            <div class="stat"><strong>24/7</strong><span>Access</span></div>
+            <div class="stat"><strong>12+</strong><span>Classes</span></div>
+            <div class="stat"><strong>200+</strong><span>Members</span></div>
+          </div>
+        </div>
+
+        <div class="hero-media reveal">
+          <img src="pexels-arturo-eg-22214041-6628962.jpg" alt="Gym barbell and kettlebell" />
+          <div class="video-overlay"></div>
+        </div>
+      </section>
+
+      <section id="gallery" class="container reveal">
+        <h2 class="section-title">Gym photo gallery</h2>
+        <p class="section-subtitle">Show visitors the energy, equipment, and training atmosphere at Friends Gym.</p>
+        <div class="gallery-grid">
+          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Gym training floor" /></div>
+          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="People lifting weights" /></div>
+          <div class="gallery-card"><img src="pexels-arturo-eg-22214041-6628962.jpg" alt="Barbell and kettlebell in gym" /></div>
+          <div class="gallery-card"><img src="pexels-warrecreates-32233887.jpg" alt="Gym workout equipment" /></div>
+        </div>
+      </section>
+
+      <section id="tools" class="container reveal">
+        <h2 class="section-title">Built-in fitness tools</h2>
+        <p class="section-subtitle">These practical tools keep your website useful while making it feel more advanced and valuable.</p>
+        <div class="grid grid-3">
+          <div class="card glass">
+            <h3>BMI calculator</h3>
+            <form id="bmi-form" class="stack">
+              <input id="height" type="number" placeholder="Height in cm" required />
+              <input id="weight" type="number" placeholder="Weight in kg" required />
+              <input id="age" type="number" placeholder="Age" required />
+              <select id="gender">
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+              <button class="btn btn-primary" type="submit">Calculate BMI & Calories</button>
+            </form>
+            <div id="bmi-result" class="result-box">Your BMI result and daily calorie estimate will appear here.</div>
+          </div>
+
+          <div class="card glass">
+            <h3>Diet planner</h3>
+            <form id="diet-form" class="stack">
+              <select id="goal">
+                <option value="lose">Lose weight</option>
+                <option value="maintain">Maintain</option>
+                <option value="gain">Gain muscle</option>
+              </select>
+              <input id="calories" type="number" placeholder="Daily calories target" required />
+              <button class="btn btn-primary" type="submit">Generate plan</button>
+            </form>
+            <div id="diet-result" class="result-box">A meal plan will appear here.</div>
+          </div>
+
+          <div class="card glass" id="login">
+            <h3 id="auth-title">Login / Register</h3>
+            <div class="auth-tabs">
+              <button class="auth-tab active" type="button" data-mode="login">Login</button>
+              <button class="auth-tab" type="button" data-mode="register">Register</button>
+            </div>
+            <form id="auth-form" class="stack">
+              <input id="auth-name" type="text" placeholder="Name" />
+              <input id="auth-email" type="email" placeholder="Email" required />
+              <input id="auth-password" type="password" placeholder="Password" required />
+              <button class="btn btn-primary" type="submit">Continue</button>
+            </form>
+            <button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button>
+            <p id="auth-message" class="result-box">Create an account or sign in to access member features.</p>
+          </div>
+
+          <div class="card glass">
+            <h3>Workout tracker</h3>
+            <p class="card-note">Track today's training and keep your dashboard current.</p>
+            <div class="tracker-list">
+              <label class="tracker-item"><input type="checkbox" data-workout value="Warm-up" /> Warm-up and mobility</label>
+              <label class="tracker-item"><input type="checkbox" data-workout value="Strength" /> Strength circuit</label>
+              <label class="tracker-item"><input type="checkbox" data-workout value="Cardio" /> Cardio finisher</label>
+              <label class="tracker-item"><input type="checkbox" data-workout value="Stretch" /> Cooldown stretch</label>
+            </div>
+            <div class="result-box"><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
+          </div>
+
+          <div class="card glass session-card">
+            <h3>Gym session tracker</h3>
+            <p class="card-note">Track steps, workout calories, and total gym time.</p>
+            <form id="session-form" class="stack">
+              <input id="session-steps" type="number" min="0" step="100" placeholder="Steps walked in gym" required />
+              <input id="session-minutes" type="number" min="1" step="1" placeholder="Workout time in minutes" required />
+              <select id="session-workout">
+                <option value="strength">Strength training</option>
+                <option value="cardio">Cardio</option>
+                <option value="hiit">HIIT</option>
+                <option value="mobility">Mobility</option>
+              </select>
+              <select id="session-intensity">
+                <option value="light">Light intensity</option>
+                <option value="moderate" selected>Moderate intensity</option>
+                <option value="hard">Hard intensity</option>
+              </select>
+              <div class="timer-controls">
+                <button class="btn btn-secondary" id="start-session" type="button">Start timer</button>
+                <button class="btn btn-secondary" id="stop-session" type="button">Stop</button>
+              </div>
+              <button class="btn btn-primary" type="submit">Calculate session</button>
+              <button class="btn btn-secondary" id="reset-session" type="button">Reset session</button>
+            </form>
+            <div class="session-summary">
+              <div><strong id="live-session-time">00:00</strong><span>Live timer</span></div>
+              <div><strong id="session-calories">0</strong><span>Calories</span></div>
+              <div><strong id="session-distance">0.00 km</strong><span>Distance</span></div>
+            </div>
+            <div id="session-result" class="result-box">Enter your workout details to see the result.</div>
+          </div>
+
+          <div class="card glass">
+            <h3>Book a visit</h3>
+            <form id="booking-form" class="stack">
+              <input id="booking-name" type="text" placeholder="Your name" required />
+              <input id="booking-phone" type="tel" placeholder="Phone number" required />
+              <select id="booking-plan">
+                <option value="Starter">Starter trial</option>
+                <option value="Pro">Pro coaching</option>
+                <option value="Elite">Elite membership</option>
+              </select>
+              <button class="btn btn-primary" type="submit">Request callback</button>
+            </form>
+            <div id="booking-result" class="result-box">Send a callback request to the gym team.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="container reveal">
+        <div class="card glass admin-dashboard">
+          <h3 id="dashboard-title">Member dashboard overview</h3>
+          <div class="metrics">
+            <div class="metric"><strong id="member-count">240+</strong><span>Members</span></div>
+            <div class="metric"><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
+            <div class="metric"><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div>
+            <div class="metric"><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
+          </div>
+          <ul class="activity-list">
+            <li>Track your daily steps, workout time, and calories after every gym session.</li>
+            <li>Use BMI and diet planner together for better progress planning.</li>
+            <li>Book a visit when you want personal coaching support.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="contact" class="container contact-grid reveal">
+        <div>
+          <h2 class="section-title">Ready to join the next level?</h2>
+          <p class="section-subtitle">Visit us for a free trial session and discover how much easier fitness can feel with the right tools behind it.</p>
+          <div class="card glass">
+            <h3>Contact details</h3>
+            <p>Pno- 72, Sirsi marg, Engineer Colony, Bisnwala, Jaipur, Rajasthan 302034<br />Email: hello@friendsgym.com<br />Phone: +1 (555) 123-4567</p>
+          </div>
+        </div>
+
+        <form class="glass-form" id="contact-form">
+          <input id="contact-name" type="text" placeholder="Your name" required />
+          <input id="contact-email" type="email" placeholder="Your email" required />
+          <textarea id="contact-message" placeholder="Tell us about your goals" required></textarea>
+          <button class="btn btn-primary" type="submit">Send message</button>
+          <div id="contact-result" class="result-box">Messages are saved for the gym team.</div>
+        </form>
+      </section>
+    </main>
+
+    <nav class="mobile-tabbar" aria-label="Mobile app navigation">
+      <a href="#home">Home</a>
+      <a href="#tools">Tools</a>
+      <a href="#dashboard">Stats</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <footer>
+      <div class="container">
+        <p>&copy; <span id="year"></span> Friends Gym. Built for stronger days.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "friends-gym-mobile-app",
+  "version": "1.0.0",
+  "description": "Installable mobile-first Friends Gym web application with member tools and JSON-backed APIs.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "gym",
+    "fitness",
+    "pwa",
+    "mobile-app"
+  ],
+  "author": "Friends Gym",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}

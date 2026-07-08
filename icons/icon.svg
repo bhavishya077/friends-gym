@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Friends Gym app icon">
+  <rect width="512" height="512" rx="112" fill="#06070b"/>
+  <circle cx="256" cy="256" r="174" fill="#ff5f1f" opacity="0.18"/>
+  <path fill="#ff5f1f" d="M114 222h48v68h-48v-68Zm236 0h48v68h-48v-68ZM178 198h44v116h-44V198Zm112 0h44v116h-44V198Zm-84 42h100v32H206v-32Z"/>
+  <path fill="#ffffff" d="M172 356h168v34H172v-34Zm34-236h100v34H206v-34Z"/>
+</svg>

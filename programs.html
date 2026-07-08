@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Programs | Friends Gym</title>
+    <meta name="description" content="Explore strength, HIIT, mobility, and personal training programs at Friends Gym." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav class="nav-bar">
+          <a href="index.html" class="brand"><span class="brand-mark"></span> Friends <span class="accent">Gym</span></a>
+          <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+          <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="programs.html" class="active">Programs</a>
+            <a href="pricing.html">Pricing</a>
+            <a href="contact.html">Contact</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 3rem 0 4rem;">
+      <section class="reveal">
+        <h1 class="section-title">Programs for every goal</h1>
+        <p class="section-subtitle">Pick a path that fits your schedule, fitness level, and ambition.</p>
+        <div class="grid grid-3">
+          <article class="card">
+            <h3>Strength Training</h3>
+            <p>Structured lifting sessions for muscle gain, posture, and athletic performance.</p>
+          </article>
+          <article class="card">
+            <h3>HIIT Classes</h3>
+            <p>Fast-paced interval workouts designed to build endurance and burn calories efficiently.</p>
+          </article>
+          <article class="card">
+            <h3>Mobility & Recovery</h3>
+            <p>Improve flexibility, joint health, and recovery with guided movement sessions.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="reveal" style="margin-top: 2rem;">
+        <div class="card glass">
+          <h3>Diet planner</h3>
+          <p>Choose your goal and daily calorie target to generate a quick meal plan.</p>
+          <form id="diet-form" class="stack">
+            <select id="goal">
+              <option value="lose">Lose weight</option>
+              <option value="maintain">Maintain</option>
+              <option value="gain">Gain muscle</option>
+            </select>
+            <input id="calories" type="number" min="1200" step="50" placeholder="Daily calories target" required />
+            <button class="btn btn-primary" type="submit">Generate plan</button>
+          </form>
+          <div id="diet-result" class="result-box">Your meal plan will appear here.</div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>© <span id="year"></span> Friends Gym. Built for stronger days.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

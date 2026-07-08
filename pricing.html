@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pricing | Friends Gym</title>
+    <meta name="description" content="Review membership options and plans at Friends Gym." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav class="nav-bar">
+          <a href="index.html" class="brand"><span class="brand-mark"></span> Friends <span class="accent">Gym</span></a>
+          <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
+          <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="programs.html">Programs</a>
+            <a href="pricing.html" class="active">Pricing</a>
+            <a href="contact.html">Contact</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container" style="padding: 3rem 0 4rem;">
+      <section class="reveal">
+        <h1 class="section-title">Membership plans</h1>
+        <p class="section-subtitle">Simple pricing that grows with your goals and schedule.</p>
+        <div class="grid grid-3">
+          <article class="card">
+            <h3>Starter</h3>
+            <p class="price">$29<span>/mo</span></p>
+            <p>Access to gym floor and basic classes.</p>
+          </article>
+          <article class="card">
+            <h3>Pro</h3>
+            <p class="price">$59<span>/mo</span></p>
+            <p>Full access plus one coaching session each week.</p>
+          </article>
+          <article class="card">
+            <h3>Elite</h3>
+            <p class="price">$89<span>/mo</span></p>
+            <p>Unlimited training, premium classes, and recovery perks.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>© <span id="year"></span> Friends Gym. Built for stronger days.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

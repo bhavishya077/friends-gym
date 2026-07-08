@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stored Data | Friends Gym</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 2rem; background: #111; color: #fff; }
+      .box { background: #1c1c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+      .admin-bar { display: flex; gap: .5rem; margin-bottom: 1rem; }
+      input, button { padding: .75rem; font: inherit; }
+      input { flex: 1; }
+      pre { white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>Friends Gym app data</h1>
+    <div class="admin-bar">
+      <input id="admin-token" type="password" placeholder="Admin token" autocomplete="current-password" />
+      <button id="load-data" type="button">Load data</button>
+    </div>
+    <div class="box">
+      <h3>Registered users</h3>
+      <pre id="users">Loading...</pre>
+    </div>
+    <div class="box">
+      <h3>Bookings</h3>
+      <pre id="bookings">Loading...</pre>
+    </div>
+
+    <div class="box">
+      <h3>Contact messages</h3>
+      <pre id="messages">Loading...</pre>
+    </div>
+
+    <div class="box">
+      <h3>Recent activity</h3>
+      <pre id="activity">Loading...</pre>
+    </div>
+
+    <script>
+      async function loadData() {
+        const token = document.getElementById('admin-token').value.trim();
+        const options = { headers: { Authorization: `Bearer ${token}` } };
+        const usersRes = await fetch('/api/users', options);
+        const usersData = await usersRes.json();
+        if (!usersRes.ok) throw new Error(usersData.message || 'Access denied.');
+        document.getElementById('users').textContent = JSON.stringify(usersData.users, null, 2);
+
+        const bookingsRes = await fetch('/api/bookings', options);
+        const bookingsData = await bookingsRes.json();
+        document.getElementById('bookings').textContent = JSON.stringify(bookingsData.bookings, null, 2);
+
+        const messagesRes = await fetch('/api/messages', options);
+        const messagesData = await messagesRes.json();
+        document.getElementById('messages').textContent = JSON.stringify(messagesData.messages, null, 2);
+
+        const activityRes = await fetch('/api/activity', options);
+        const activityData = await activityRes.json();
+        document.getElementById('activity').textContent = JSON.stringify(activityData.activity, null, 2);
+      }
+
+      document.getElementById('load-data').addEventListener('click', () => {
+        loadData().catch(error => {
+          document.getElementById('users').textContent = error.message;
+        });
+      });
+    </script>
+  </body>
+</html>

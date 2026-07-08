@@ -1,0 +1,11 @@
+.env
+data/
+node_modules/
+users.json
+bookings.json
+messages.json
+activity.log
+*.keystore
+*.jks
+android/.gradle/
+android/app/build/
