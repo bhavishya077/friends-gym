@@ -194,6 +194,30 @@ button { cursor: pointer; }
   z-index: 0;
 }
 
+:root[data-theme="light"] .hero {
+  background:
+    linear-gradient(135deg, rgba(244, 247, 251, 0.94), rgba(255, 255, 255, 0.84)),
+    url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80');
+  background-size: 115%;
+  background-position: center;
+  background-blend-mode: normal;
+}
+
+:root[data-theme="light"] .hero::before {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:root[data-theme="light"] .hero-copy h1,
+:root[data-theme="light"] .hero p,
+:root[data-theme="light"] .hero .stat strong,
+:root[data-theme="light"] .hero .stat span {
+  color: var(--text);
+}
+
+:root[data-theme="light"] .hero .stat {
+  background: rgba(255, 255, 255, 0.78);
+}
+
 .hero::after {
   content: "";
   position: absolute;
@@ -294,16 +318,22 @@ button { cursor: pointer; }
   color: #ffffff;
 }
 
-.install-button {
+.hero .install-button {
   border-color: var(--install);
   background: var(--install);
   color: #ffffff;
   box-shadow: 0 10px 24px rgba(34, 197, 94, 0.28);
 }
 
-.install-button:hover {
+.hero .install-button:hover {
   border-color: var(--install-hover);
   background: var(--install-hover);
+}
+
+:root[data-theme="light"] .hero .btn-secondary:not(.install-button) {
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--text);
 }
 
 .btn:focus-visible,

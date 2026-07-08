@@ -20,13 +20,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const installButton = document.getElementById('install-app');
   if (installButton) {
     installButton.addEventListener('click', async () => {
-      if (!installPrompt) return;
+      if (!installPrompt) {
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        window.alert(isIos
+          ? 'Safari mein Share button dabayein, phir Add to Home Screen select karein.'
+          : 'Chrome menu kholein aur Install app ya Add to Home screen select karein.');
+        return;
+      }
       installPrompt.prompt();
       await installPrompt.userChoice;
       installPrompt = null;
-      installButton.hidden = true;
     });
   }
+
+  window.addEventListener('appinstalled', () => {
+    if (installButton) installButton.hidden = true;
+  });
 
   if (toggle && nav) {
     toggle.addEventListener('click', () => {
