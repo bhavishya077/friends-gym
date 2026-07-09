@@ -19,6 +19,7 @@
     <link rel="apple-touch-icon" href="icons/icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script type="application/ld+json">
@@ -44,7 +45,9 @@
         <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
         <div class="nav-links">
           <a href="#home" class="active">Home</a>
+          <a href="#gallery">Classes</a>
           <a href="#tools">Tools</a>
+          <a href="#pricing">Plans</a>
           <a href="#dashboard">Dashboard</a>
           <a href="#contact">Contact</a>
         </div>
@@ -52,42 +55,71 @@
     </header>
 
     <main id="home">
-      <section class="hero container">
-        <div class="hero-copy reveal">
-          <span class="eyebrow">Premium fitness experience</span>
-          <h1>Train smarter with video coaching, smart tools, and real progress.</h1>
-          <p>From immersive video backgrounds to BMI calculations, workout tracking, meal planning, and member access, Friends Gym brings everything together in one powerful fitness experience.</p>
+      <section class="hero">
+        <video class="hero-video" autoplay muted loop playsinline poster="pexels-arturo-eg-22214041-6628962.jpg">
+          <source src="assets/hero-lift.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-gradient"></div>
+        <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="eyebrow">Shape your body</span>
+          <h1 class="split-headline">Be strong training hard</h1>
+          <p>Train with modern equipment, practical fitness tools, workout tracking, smart diet planning, and real progress support at Friends Gym.</p>
           <div class="hero-actions">
-            <a href="#tools" class="btn btn-primary">Explore tools</a>
-            <a href="#login" class="btn btn-secondary">Join now</a>
+            <a href="#tools" class="btn btn-primary">Get info</a>
+            <a href="#pricing" class="btn btn-secondary">Our plans</a>
             <button class="btn btn-secondary install-button" id="install-app" type="button">Install app</button>
           </div>
           <div class="stats">
-            <div class="stat"><strong>24/7</strong><span>Access</span></div>
-            <div class="stat"><strong>12+</strong><span>Classes</span></div>
-            <div class="stat"><strong>200+</strong><span>Members</span></div>
+            <div class="stat"><strong data-count="24">24</strong><span>Access</span></div>
+            <div class="stat"><strong data-count="12">12</strong><span>Classes</span></div>
+            <div class="stat"><strong data-count="200">200</strong><span>Members</span></div>
           </div>
         </div>
 
-        <div class="hero-media reveal">
+        <div class="hero-media">
           <img src="pexels-arturo-eg-22214041-6628962.jpg" alt="Gym barbell and kettlebell" />
           <div class="video-overlay"></div>
         </div>
-      </section>
-
-      <section id="gallery" class="container reveal">
-        <h2 class="section-title">Gym photo gallery</h2>
-        <p class="section-subtitle">Show visitors the energy, equipment, and training atmosphere at Friends Gym.</p>
-        <div class="gallery-grid">
-          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Gym training floor" /></div>
-          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="People lifting weights" /></div>
-          <div class="gallery-card"><img src="pexels-arturo-eg-22214041-6628962.jpg" alt="Barbell and kettlebell in gym" /></div>
-          <div class="gallery-card"><img src="pexels-warrecreates-32233887.jpg" alt="Gym workout equipment" /></div>
         </div>
       </section>
 
-      <section id="tools" class="container reveal">
-        <h2 class="section-title">Built-in fitness tools</h2>
+      <section id="gallery" class="container motion-section">
+        <span class="section-kicker">Our Classes</span>
+        <h2 class="section-title split-headline">What we can offer</h2>
+        <p class="section-subtitle">Choose the training style that fits your goal and use the built-in tools below to track progress.</p>
+        <div class="gallery-grid">
+          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Gym training floor" /><div class="class-label"><span>Strength</span><h3>Weightlifting</h3></div></div>
+          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="People lifting weights" /><div class="class-label"><span>Cardio</span><h3>Indoor cycling</h3></div></div>
+          <div class="gallery-card video-card">
+            <video autoplay muted loop playsinline preload="metadata" poster="pexels-arturo-eg-22214041-6628962.jpg">
+              <source src="assets/bench-press.mp4" type="video/mp4" />
+            </video>
+            <div class="class-label"><span>Power</span><h3>Bench press</h3></div>
+          </div>
+          <div class="gallery-card video-card">
+            <video autoplay muted loop playsinline preload="metadata" poster="pexels-warrecreates-32233887.jpg">
+              <source src="assets/battle-ropes.mp4" type="video/mp4" />
+            </video>
+            <div class="class-label"><span>Training</span><h3>Battle ropes</h3></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Power. Discipline. Progress.</span>
+          <span>Friends Gym class flow</span>
+          <span>Strength • Cardio • Recovery • Focus</span>
+          <span>Power. Discipline. Progress.</span>
+          <span>Friends Gym class flow</span>
+          <span>Strength • Cardio • Recovery • Focus</span>
+        </div>
+      </div>
+
+      <section id="tools" class="container motion-section">
+        <span class="section-kicker">Why choose us?</span>
+        <h2 class="section-title split-headline">Built-in fitness tools</h2>
         <p class="section-subtitle">These practical tools keep your website useful while making it feel more advanced and valuable.</p>
         <div class="grid grid-3">
           <div class="card glass">
@@ -96,10 +128,11 @@
               <input id="height" type="number" placeholder="Height in cm" required />
               <input id="weight" type="number" placeholder="Weight in kg" required />
               <input id="age" type="number" placeholder="Age" required />
-              <select id="gender">
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
+              <input type="hidden" id="gender" value="male" />
+              <div class="segmented-control" data-segmented="gender" role="tablist" aria-label="Gender">
+                <button class="segment active" type="button" data-value="male" aria-pressed="true">Male</button>
+                <button class="segment" type="button" data-value="female" aria-pressed="false">Female</button>
+              </div>
               <button class="btn btn-primary" type="submit">Calculate BMI & Calories</button>
             </form>
             <div id="bmi-result" class="result-box">Your BMI result and daily calorie estimate will appear here.</div>
@@ -108,11 +141,12 @@
           <div class="card glass">
             <h3>Diet planner</h3>
             <form id="diet-form" class="stack">
-              <select id="goal">
-                <option value="lose">Lose weight</option>
-                <option value="maintain">Maintain</option>
-                <option value="gain">Gain muscle</option>
-              </select>
+              <input type="hidden" id="goal" value="lose" />
+              <div class="segmented-control" data-segmented="goal" role="tablist" aria-label="Diet goal">
+                <button class="segment active" type="button" data-value="lose" aria-pressed="true">Lose</button>
+                <button class="segment" type="button" data-value="maintain" aria-pressed="false">Maintain</button>
+                <button class="segment" type="button" data-value="gain" aria-pressed="false">Gain</button>
+              </div>
               <input id="calories" type="number" placeholder="Daily calories target" required />
               <button class="btn btn-primary" type="submit">Generate plan</button>
             </form>
@@ -159,11 +193,12 @@
                 <option value="hiit">HIIT</option>
                 <option value="mobility">Mobility</option>
               </select>
-              <select id="session-intensity">
-                <option value="light">Light intensity</option>
-                <option value="moderate" selected>Moderate intensity</option>
-                <option value="hard">Hard intensity</option>
-              </select>
+              <input type="hidden" id="session-intensity" value="moderate" />
+              <div class="segmented-control" data-segmented="session-intensity" role="tablist" aria-label="Workout intensity">
+                <button class="segment" type="button" data-value="light" aria-pressed="false">Light</button>
+                <button class="segment active" type="button" data-value="moderate" aria-pressed="true">Moderate</button>
+                <button class="segment" type="button" data-value="hard" aria-pressed="false">Hard</button>
+              </div>
               <div class="timer-controls">
                 <button class="btn btn-secondary" id="start-session" type="button">Start timer</button>
                 <button class="btn btn-secondary" id="stop-session" type="button">Stop</button>
@@ -196,9 +231,67 @@
         </div>
       </section>
 
-      <section id="dashboard" class="container reveal">
+      <section id="pricing" class="container pricing-section motion-section">
+        <span class="section-kicker">Our Plan</span>
+        <h2 class="section-title split-headline">Choose your pricing plan</h2>
+        <div class="pricing-grid">
+          <article class="pricing-card">
+            <h3>Class drop-in</h3>
+            <strong class="price">Rs 399</strong>
+            <span class="price-label">Single class</span>
+            <ul>
+              <li>Free fitness check</li>
+              <li>Unlimited equipment access</li>
+              <li>Trainer guidance</li>
+              <li>No time restriction</li>
+            </ul>
+            <a class="btn btn-secondary" href="#contact">Enroll now</a>
+          </article>
+          <article class="pricing-card featured">
+            <h3>12 Month unlimited</h3>
+            <strong class="price">Rs 9999</strong>
+            <span class="price-label">Best value</span>
+            <ul>
+              <li>Personal training support</li>
+              <li>Diet planning tools</li>
+              <li>Workout tracking</li>
+              <li>Priority callback</li>
+            </ul>
+            <a class="btn btn-primary" href="#contact">Enroll now</a>
+          </article>
+          <article class="pricing-card">
+            <h3>6 Month unlimited</h3>
+            <strong class="price">Rs 5999</strong>
+            <span class="price-label">Popular plan</span>
+            <ul>
+              <li>Strength and cardio access</li>
+              <li>BMI and calorie calculator</li>
+              <li>Session dashboard</li>
+              <li>Flexible timing</li>
+            </ul>
+            <a class="btn btn-secondary" href="#contact">Enroll now</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="video-feature">
+        <div class="container">
+          <div class="video-feature-head">
+            <h2 class="section-title split-headline">A day on the floor</h2>
+            <p class="section-subtitle">Inline motion, custom controls, and a scoreboard feel without browser chrome getting in the way.</p>
+          </div>
+          <div class="floor-video-shell">
+            <video id="floor-video" muted playsinline preload="metadata" poster="pexels-warrecreates-32233887.jpg">
+              <source src="assets/hero-lift.mp4" type="video/mp4" />
+            </video>
+            <button class="video-toggle" id="floor-video-toggle" type="button" aria-pressed="false">Play</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="container motion-section">
         <div class="card glass admin-dashboard">
-          <h3 id="dashboard-title">Member dashboard overview</h3>
+          <h3 id="dashboard-title" class="split-headline">Member dashboard overview</h3>
           <div class="metrics">
             <div class="metric"><strong id="member-count">240+</strong><span>Members</span></div>
             <div class="metric"><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
@@ -213,9 +306,9 @@
         </div>
       </section>
 
-      <section id="contact" class="container contact-grid reveal">
+      <section id="contact" class="container contact-grid motion-section">
         <div>
-          <h2 class="section-title">Ready to join the next level?</h2>
+          <h2 class="section-title split-headline">Ready to join the next level?</h2>
           <p class="section-subtitle">Visit us for a free trial session and discover how much easier fitness can feel with the right tools behind it.</p>
           <div class="card glass">
             <h3>Contact details</h3>
@@ -246,6 +339,8 @@
       </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

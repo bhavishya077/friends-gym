@@ -1,28 +1,46 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const root = document.documentElement;
+  const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
   const toggle = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.nav-links');
   const themeToggle = document.getElementById('theme-toggle');
-  const root = document.documentElement;
-  const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+  const installButton = document.getElementById('install-app');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
 
   if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   }
 
+  const applyTheme = (theme) => {
+    root.setAttribute('data-theme', theme);
+    localStorage.setItem('friends-gym-theme', theme);
+    if (themeToggle) themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  };
+
+  const savedTheme = localStorage.getItem('friends-gym-theme');
+  if (savedTheme) applyTheme(savedTheme);
+  else if (themeToggle) themeToggle.textContent = root.getAttribute('data-theme') === 'light' ? 'Dark' : 'Light';
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
-    const installButton = document.getElementById('install-app');
     event.preventDefault();
     installPrompt = event;
     if (installButton) installButton.hidden = false;
   });
 
-  const installButton = document.getElementById('install-app');
   if (installButton) {
+    installButton.hidden = false;
     installButton.addEventListener('click', async () => {
       if (!installPrompt) {
-        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-        window.alert(isIos
+        window.alert(/iphone|ipad|ipod/i.test(navigator.userAgent)
           ? 'Safari mein Share button dabayein, phir Add to Home Screen select karein.'
           : 'Chrome menu kholein aur Install app ya Add to Home screen select karein.');
         return;
@@ -42,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
       nav.classList.toggle('active');
       toggle.setAttribute('aria-expanded', nav.classList.contains('active') ? 'true' : 'false');
     });
-
     nav.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
         nav.classList.remove('active');
@@ -51,41 +68,169 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const applyTheme = (theme) => {
-    root.setAttribute('data-theme', theme);
-    localStorage.setItem('friends-gym-theme', theme);
-    if (themeToggle) themeToggle.textContent = theme === 'dark' ? 'Light' : 'Dark';
+  const splitHeadline = (element) => {
+    if (!element || element.dataset.splitDone) return;
+    const text = element.textContent.trim();
+    element.textContent = '';
+    const words = text.split(/\s+/);
+    words.forEach((word, index) => {
+      const wordSpan = document.createElement('span');
+      wordSpan.className = 'word';
+      word.split('').forEach((char) => {
+        const charSpan = document.createElement('span');
+        charSpan.className = 'char';
+        charSpan.textContent = char;
+        wordSpan.appendChild(charSpan);
+      });
+      element.appendChild(wordSpan);
+      if (index < words.length - 1) element.appendChild(document.createTextNode(' '));
+    });
+    element.dataset.splitDone = 'true';
   };
 
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(nextTheme);
+  document.querySelectorAll('.split-headline').forEach(splitHeadline);
+
+  if (!reducedMotion && window.gsap && window.ScrollTrigger) {
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.from('.hero-copy .word .char', {
+      yPercent: 120,
+      opacity: 0,
+      duration: 0.9,
+      ease: 'power4.out',
+      stagger: 0.015,
+      delay: 0.2
     });
-  }
 
-  const savedTheme = localStorage.getItem('friends-gym-theme');
-  if (savedTheme) {
-    applyTheme(savedTheme);
-  } else if (themeToggle) {
-    themeToggle.textContent = root.getAttribute('data-theme') === 'light' ? 'Dark' : 'Light';
-  }
-
-  const revealItems = document.querySelectorAll('.reveal');
-  const revealObserver = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('animate');
-        revealObserver.unobserve(entry.target);
+    gsap.from('.hero .stat strong', {
+      textContent: 0,
+      duration: 2,
+      ease: 'power1.out',
+      snap: { textContent: 1 },
+      stagger: 0.12,
+      scrollTrigger: {
+        trigger: '.hero',
+        start: 'top top'
       }
     });
-  }, { threshold: 0.15 });
-  revealItems.forEach((item) => revealObserver.observe(item));
 
-  const yearElement = document.getElementById('year');
-  if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
+    document.querySelectorAll('.motion-section .section-title').forEach((title) => {
+      gsap.fromTo(title, { clipPath: 'inset(0 100% 0 0)' }, {
+        clipPath: 'inset(0 0% 0 0)',
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: title, start: 'top 80%' }
+      });
+    });
+
+    document.querySelectorAll('.gallery-card').forEach((card, index) => {
+      gsap.fromTo(card, {
+        y: 60,
+        rotate: index % 2 === 0 ? -8 : 8,
+        scale: 0.95,
+        opacity: 0
+      }, {
+        y: 0,
+        rotate: 0,
+        scale: 1,
+        opacity: 1,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: card, start: 'top 82%' }
+      });
+    });
+
+    gsap.to('.gallery-grid', {
+      y: -60,
+      scrollTrigger: {
+        trigger: '#gallery',
+        start: 'top 75%',
+        end: 'bottom top',
+        scrub: true
+      }
+    });
+
+    gsap.to('.marquee-track', {
+      xPercent: -50,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.marquee',
+        scrub: 0.2
+      }
+    });
+
+    document.querySelectorAll('.btn').forEach((button) => button.classList.add('magnetic'));
+  } else {
+    document.querySelectorAll('.hero-copy .char').forEach((char) => {
+      char.style.opacity = '1';
+      char.style.transform = 'none';
+    });
+  }
+
+  if (!reducedMotion && !isMobile) {
+    document.querySelectorAll('.magnetic').forEach((item) => {
+      item.addEventListener('pointermove', (event) => {
+        const rect = item.getBoundingClientRect();
+        const dx = ((event.clientX - rect.left) / rect.width - 0.5) * 12;
+        const dy = ((event.clientY - rect.top) / rect.height - 0.5) * 12;
+        item.style.transform = `translate(${dx}px, ${dy}px)`;
+      });
+      item.addEventListener('pointerleave', () => {
+        item.style.transform = '';
+      });
+    });
+  }
+
+  const setupSegmented = (groupName, inputId) => {
+    const group = document.querySelector(`[data-segmented="${groupName}"]`);
+    const input = document.getElementById(inputId);
+    if (!group || !input) return;
+    const buttons = [...group.querySelectorAll('.segment')];
+    const pill = document.createElement('div');
+    pill.className = 'segment-pill';
+    group.prepend(pill);
+
+    const movePill = (activeButton) => {
+      const index = buttons.indexOf(activeButton);
+      const width = 100 / buttons.length;
+      pill.style.width = `${width}%`;
+      pill.style.transform = `translateX(${index * 100}%)`;
+    };
+
+    const activate = (button) => {
+      buttons.forEach((item) => {
+        const active = item === button;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      input.value = button.dataset.value;
+      movePill(button);
+    };
+
+    buttons.forEach((button) => button.addEventListener('click', () => activate(button)));
+    activate(buttons.find((button) => button.classList.contains('active')) || buttons[0]);
+  };
+
+  setupSegmented('gender', 'gender');
+  setupSegmented('goal', 'goal');
+  setupSegmented('session-intensity', 'session-intensity');
+
+  const floorVideo = document.getElementById('floor-video');
+  const floorVideoToggle = document.getElementById('floor-video-toggle');
+  if (floorVideo && floorVideoToggle) {
+    const updateLabel = () => {
+      const paused = floorVideo.paused;
+      floorVideoToggle.textContent = paused ? 'Play' : 'Pause';
+      floorVideoToggle.setAttribute('aria-pressed', paused ? 'false' : 'true');
+    };
+    floorVideoToggle.addEventListener('click', async () => {
+      if (floorVideo.paused) await floorVideo.play().catch(() => {});
+      else floorVideo.pause();
+      updateLabel();
+    });
+    floorVideo.addEventListener('play', updateLabel);
+    floorVideo.addEventListener('pause', updateLabel);
+    updateLabel();
   }
 
   const bmiForm = document.getElementById('bmi-form');
@@ -97,25 +242,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const weight = Number(document.getElementById('weight').value);
       const age = Number(document.getElementById('age').value);
       const gender = document.getElementById('gender').value;
-
       if (!height || !weight || !age) {
         bmiResult.textContent = 'Please enter valid height, weight, and age.';
         return;
       }
-
       const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
       let bmiMessage = 'Normal range';
       if (bmi < 18.5) bmiMessage = 'Underweight';
       else if (bmi < 24.9) bmiMessage = 'Healthy';
       else if (bmi < 29.9) bmiMessage = 'Overweight';
       else bmiMessage = 'Obese';
-
       const bmr = gender === 'male'
         ? 10 * weight + 6.25 * height - 5 * age + 5
         : 10 * weight + 6.25 * height - 5 * age - 161;
       const dailyCalories = Math.round(bmr * 1.55);
-
-      bmiResult.innerHTML = `Your BMI is <strong>${bmi}</strong> — <strong>${bmiMessage}</strong>.<br>Your estimated daily calories are <strong>${dailyCalories}</strong> kcal.`;
+      bmiResult.innerHTML = `Your BMI is <strong>${bmi}</strong> - <strong>${bmiMessage}</strong>.<br>Your estimated daily calories are <strong>${dailyCalories}</strong> kcal.`;
     });
   }
 
@@ -123,10 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const trackerStatus = document.getElementById('tracker-status');
   if (trackerStatus) {
     const savedWorkout = JSON.parse(localStorage.getItem('friends-gym-workout') || '[]');
-    workoutBoxes.forEach((box) => {
-      box.checked = savedWorkout.includes(box.value);
-    });
-
+    workoutBoxes.forEach((box) => { box.checked = savedWorkout.includes(box.value); });
     const updateTracker = () => {
       const done = [...workoutBoxes].filter((box) => box.checked).length;
       trackerStatus.textContent = `${done}/${workoutBoxes.length} completed`;
@@ -161,21 +299,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${minutes}:${seconds}`;
   };
 
+  const pulseTimer = () => {
+    if (!liveSessionTime) return;
+    liveSessionTime.animate([
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.08)' },
+      { transform: 'scale(1)' }
+    ], { duration: 220, easing: 'ease-out' });
+  };
+
   const calculateCalories = (steps, minutes, workout, intensity) => {
-    const workoutRates = {
-      strength: 5.8,
-      cardio: 8.2,
-      hiit: 10.5,
-      mobility: 3.2
-    };
-    const intensityRates = {
-      light: 0.82,
-      moderate: 1,
-      hard: 1.22
-    };
-    const workoutCalories = minutes * workoutRates[workout] * intensityRates[intensity];
-    const stepCalories = steps * 0.045;
-    return Math.max(0, Math.round(workoutCalories + stepCalories));
+    const workoutRates = { strength: 5.8, cardio: 8.2, hiit: 10.5, mobility: 3.2 };
+    const intensityRates = { light: 0.82, moderate: 1, hard: 1.22 };
+    return Math.max(0, Math.round(minutes * workoutRates[workout] * intensityRates[intensity] + steps * 0.045));
   };
 
   const updateSessionDashboard = (session) => {
@@ -190,8 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const savedSession = JSON.parse(localStorage.getItem('friends-gym-session') || 'null');
-  updateSessionDashboard(savedSession);
+  updateSessionDashboard(JSON.parse(localStorage.getItem('friends-gym-session') || 'null'));
 
   if (startSession && liveSessionTime) {
     startSession.addEventListener('click', () => {
@@ -201,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = Math.floor((Date.now() - sessionStartedAt) / 1000);
         liveSessionTime.textContent = formatClock(seconds);
         if (sessionMinutes) sessionMinutes.value = Math.max(1, Math.round(seconds / 60));
+        pulseTimer();
       }, 1000);
     });
   }
@@ -222,16 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const intensity = sessionIntensity.value;
       const distanceKm = steps * 0.000762;
       const calories = calculateCalories(steps, minutes, workout, intensity);
-      const session = {
-        steps,
-        minutes,
-        workout,
-        intensity,
-        distanceKm,
-        calories,
-        savedAt: new Date().toISOString()
-      };
-
+      const session = { steps, minutes, workout, intensity, distanceKm, calories, savedAt: new Date().toISOString() };
       localStorage.setItem('friends-gym-session', JSON.stringify(session));
       updateSessionDashboard(session);
     });
@@ -261,23 +388,15 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       const goal = document.getElementById('goal').value;
       const caloriesValue = Number(document.getElementById('calories').value);
-
       if (!caloriesValue || caloriesValue <= 0) {
         dietResult.textContent = 'Please enter a valid calorie target.';
         return;
       }
-
       const calories = Math.round(caloriesValue);
       let plan = '';
-
-      if (goal === 'lose') {
-        plan = `Breakfast: Greek yogurt with berries, Lunch: grilled chicken salad, Dinner: baked fish with vegetables, Snack: apple + nuts.`;
-      } else if (goal === 'maintain') {
-        plan = `Breakfast: oats with banana, Lunch: rice bowl with chicken, Dinner: pasta with lean protein, Snack: hummus and veggies.`;
-      } else {
-        plan = `Breakfast: eggs with toast, Lunch: turkey wrap with rice, Dinner: steak with potatoes, Snack: protein shake.`;
-      }
-
+      if (goal === 'lose') plan = 'Breakfast: Greek yogurt with berries, Lunch: grilled chicken salad, Dinner: baked fish with vegetables, Snack: apple + nuts.';
+      else if (goal === 'maintain') plan = 'Breakfast: oats with banana, Lunch: rice bowl with chicken, Dinner: pasta with lean protein, Snack: hummus and veggies.';
+      else plan = 'Breakfast: eggs with toast, Lunch: turkey wrap with rice, Dinner: steak with potatoes, Snack: protein shake.';
       dietResult.innerHTML = `<strong>Plan for ${calories} kcal</strong><br>${plan}`;
     });
   }
@@ -313,9 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardTitle) dashboardTitle.textContent = `Welcome back, ${userName}`;
     authTabs.forEach((item) => { item.hidden = true; });
     if (authForm) {
-      authForm.querySelectorAll('input').forEach((input) => {
-        input.hidden = true;
-      });
+      authForm.querySelectorAll('input').forEach((input) => { input.hidden = true; });
       const submitButton = authForm.querySelector('button');
       if (submitButton) {
         submitButton.textContent = 'Logged in';
@@ -328,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (authForm && authMessage) {
     updateAuthMode('login');
-
     const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
     if (savedUser) {
       setLoggedInUser(savedUser);
@@ -336,9 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     authTabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        updateAuthMode(tab.dataset.mode);
-      });
+      tab.addEventListener('click', () => updateAuthMode(tab.dataset.mode));
     });
 
     if (authLogout) {
@@ -368,35 +482,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = document.getElementById('auth-name').value.trim();
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
-
       if (!email || !password) {
         authMessage.textContent = 'Please enter your email and password.';
         return;
       }
-
       if (authMode === 'register' && !name) {
         authMessage.textContent = 'Please enter your name to register.';
         return;
       }
-
       try {
         const endpoint = `${apiBase}${authMode === 'register' ? '/api/register' : '/api/login'}`;
-        const payload = authMode === 'register'
-          ? { name, email, password }
-          : { email, password };
-
+        const payload = authMode === 'register' ? { name, email, password } : { email, password };
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
         const result = await response.json();
         authMessage.textContent = result.message || 'Request completed.';
-
-        if (response.ok && result.user) {
-          setLoggedInUser(result.user);
-        }
+        if (response.ok && result.user) setLoggedInUser(result.user);
       } catch (error) {
         authMessage.textContent = 'Unable to reach the server. Please try again.';
       }
@@ -419,14 +523,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (bookingForm && bookingResult) {
     bookingForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const payload = {
-        name: document.getElementById('booking-name').value.trim(),
-        phone: document.getElementById('booking-phone').value.trim(),
-        plan: document.getElementById('booking-plan').value
-      };
-
       try {
-        const result = await postJson('/api/bookings', payload);
+        const result = await postJson('/api/bookings', {
+          name: document.getElementById('booking-name').value.trim(),
+          phone: document.getElementById('booking-phone').value.trim(),
+          plan: document.getElementById('booking-plan').value
+        });
         bookingResult.textContent = result.message;
         bookingForm.reset();
       } catch (error) {
@@ -440,14 +542,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (contactForm && contactResult) {
     contactForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const payload = {
-        name: document.getElementById('contact-name').value.trim(),
-        email: document.getElementById('contact-email').value.trim(),
-        message: document.getElementById('contact-message').value.trim()
-      };
-
       try {
-        const result = await postJson('/api/contact', payload);
+        const result = await postJson('/api/contact', {
+          name: document.getElementById('contact-name').value.trim(),
+          email: document.getElementById('contact-email').value.trim(),
+          message: document.getElementById('contact-message').value.trim()
+        });
         contactResult.textContent = result.message;
         contactForm.reset();
       } catch (error) {
@@ -455,5 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-});
 
+  const yearElement = document.getElementById('year');
+  if (yearElement) yearElement.textContent = new Date().getFullYear();
+});
