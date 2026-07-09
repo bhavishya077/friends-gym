@@ -2,6 +2,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+let nodemailer = null;
+
+try {
+  nodemailer = require('nodemailer');
+} catch {
+  nodemailer = null;
+}
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -81,7 +88,38 @@ function isAdmin(req) {
   return Boolean(ADMIN_TOKEN) && token === `Bearer ${ADMIN_TOKEN}`;
 }
 
-async function notifyOwner(text) {
+async function sendOwnerEmail(subject, text) {
+  const smtpEmail = process.env.SMTP_EMAIL;
+  const smtpPassword = process.env.SMTP_PASSWORD;
+  const ownerEmail = process.env.OWNER_EMAIL || smtpEmail;
+
+  if (!nodemailer || !smtpEmail || !smtpPassword || !ownerEmail) return;
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: process.env.SMTP_SECURE !== 'false',
+    auth: {
+      user: smtpEmail,
+      pass: smtpPassword
+    }
+  });
+
+  try {
+    await transporter.sendMail({
+      from: `"Friends Gym" <${smtpEmail}>`,
+      to: ownerEmail,
+      subject,
+      text
+    });
+  } catch (error) {
+    logActivity(`EMAIL_NOTIFICATION_FAILED ${error.message}`);
+  }
+}
+
+async function notifyOwner(subject, text) {
+  await sendOwnerEmail(subject, text);
+
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
   if (!botToken || !chatId || typeof fetch !== 'function') return;
@@ -90,10 +128,10 @@ async function notifyOwner(text) {
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text })
+      body: JSON.stringify({ chat_id: chatId, text: `${subject}\n${text}` })
     });
   } catch (error) {
-    logActivity(`NOTIFICATION_FAILED ${error.message}`);
+    logActivity(`TELEGRAM_NOTIFICATION_FAILED ${error.message}`);
   }
 }
 
@@ -253,7 +291,10 @@ const server = http.createServer((req, res) => {
         bookings.unshift(booking);
         writeJsonArray(BOOKINGS_FILE, bookings);
         logActivity(`BOOKING ${name} (${phone}) - ${plan}`);
-        void notifyOwner(`New Friends Gym booking\nName: ${name}\nPhone: ${phone}\nPlan: ${plan}`);
+        void notifyOwner(
+          'New Friends Gym booking',
+          `Name: ${name}\nPhone: ${phone}\nPlan: ${plan}`
+        );
         sendJson(res, 201, { message: 'Callback request saved. Friends Gym will contact you soon.', booking });
       } catch {
         sendJson(res, 400, { message: 'Invalid request data.' });
@@ -279,7 +320,10 @@ const server = http.createServer((req, res) => {
         messages.unshift(contact);
         writeJsonArray(MESSAGES_FILE, messages);
         logActivity(`CONTACT ${name} (${email})`);
-        void notifyOwner(`New Friends Gym message\nName: ${name}\nEmail: ${email}\nMessage: ${message}`);
+        void notifyOwner(
+          'New Friends Gym message',
+          `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
+        );
         sendJson(res, 201, { message: 'Message saved. The team will review it shortly.', contact });
       } catch {
         sendJson(res, 400, { message: 'Invalid request data.' });

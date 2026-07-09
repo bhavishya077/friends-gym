@@ -24,7 +24,7 @@ Enter the `ADMIN_TOKEN` configured on the server to load member, booking, messag
 
 ## Production Deploy
 
-This project has no external npm dependencies. It includes `render.yaml` and a `Dockerfile`. Copy `.env.example` to `.env` for local production configuration, or configure the same variables in the hosting dashboard.
+This project includes `render.yaml` and a `Dockerfile`. Copy `.env.example` to `.env` for local production configuration, or configure the same variables in the hosting dashboard.
 
 ```bash
 npm start
@@ -37,6 +37,8 @@ Set the platform port with `PORT` if required. Set `DATA_DIR` to a persistent di
 - `messages.json`
 - `activity.log`
 
-Passwords are stored with Node's `scrypt` hashing. Admin APIs require `ADMIN_TOKEN`. Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` to receive instant booking and contact alerts.
+Passwords are stored with Node's `scrypt` hashing. Admin APIs require `ADMIN_TOKEN`.
+
+Set `SMTP_EMAIL`, `SMTP_PASSWORD`, and `OWNER_EMAIL` to receive booking and contact alerts by email. For Gmail, use a Google App Password, not your normal Gmail password. Optional Telegram alerts still work with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
 
 See `PLAY_STORE_DEPLOYMENT.md` for the publishing checklist.
