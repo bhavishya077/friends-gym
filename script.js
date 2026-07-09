@@ -215,24 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSegmented('goal', 'goal');
   setupSegmented('session-intensity', 'session-intensity');
 
-  const floorVideo = document.getElementById('floor-video');
-  const floorVideoToggle = document.getElementById('floor-video-toggle');
-  if (floorVideo && floorVideoToggle) {
-    const updateLabel = () => {
-      const paused = floorVideo.paused;
-      floorVideoToggle.textContent = paused ? 'Play' : 'Pause';
-      floorVideoToggle.setAttribute('aria-pressed', paused ? 'false' : 'true');
-    };
-    floorVideoToggle.addEventListener('click', async () => {
-      if (floorVideo.paused) await floorVideo.play().catch(() => {});
-      else floorVideo.pause();
-      updateLabel();
-    });
-    floorVideo.addEventListener('play', updateLabel);
-    floorVideo.addEventListener('pause', updateLabel);
-    updateLabel();
-  }
-
   const bmiForm = document.getElementById('bmi-form');
   const bmiResult = document.getElementById('bmi-result');
   if (bmiForm && bmiResult) {
