@@ -12,7 +12,27 @@ try {
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
-const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : ROOT;
+function resolveDataDir() {
+  const candidates = [
+    process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : null,
+    path.join('/tmp', 'friends-gym-data'),
+    ROOT
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    try {
+      fs.mkdirSync(candidate, { recursive: true });
+      fs.accessSync(candidate, fs.constants.W_OK);
+      return candidate;
+    } catch {
+      // Try the next candidate so the app can still boot on read-only hosts.
+    }
+  }
+
+  return ROOT;
+}
+
+const DATA_DIR = resolveDataDir();
 const DATA_FILE = path.join(DATA_DIR, 'users.json');
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
@@ -20,8 +40,6 @@ const ACTIVITY_FILE = path.join(DATA_DIR, 'activity.log');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 const rateLimits = new Map();
-
-fs.mkdirSync(DATA_DIR, { recursive: true });
 
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, '[]', 'utf8');

@@ -10,7 +10,7 @@ services:
       - key: NODE_VERSION
         value: 20
       - key: DATA_DIR
-        value: /var/data
+        value: /tmp/friends-gym-data
       - key: ADMIN_TOKEN
         generateValue: true
       - key: ALLOWED_ORIGIN
@@ -31,7 +31,3 @@ services:
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
-    disk:
-      name: friends-gym-data
-      mountPath: /var/data
-      sizeGB: 1
