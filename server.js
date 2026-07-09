@@ -107,11 +107,19 @@ function isAdmin(req) {
 }
 
 async function sendOwnerEmail(subject, text) {
-  const smtpEmail = process.env.SMTP_EMAIL;
-  const smtpPassword = process.env.SMTP_PASSWORD;
-  const ownerEmail = process.env.OWNER_EMAIL || smtpEmail;
+  const smtpEmail = String(process.env.SMTP_EMAIL || '').trim();
+  const smtpPassword = String(process.env.SMTP_PASSWORD || '').replace(/\s+/g, '');
+  const ownerEmail = String(process.env.OWNER_EMAIL || smtpEmail).trim();
 
-  if (!nodemailer || !smtpEmail || !smtpPassword || !ownerEmail) return;
+  if (!nodemailer) {
+    logActivity('EMAIL_NOTIFICATION_SKIPPED nodemailer_not_installed');
+    return { sent: false, reason: 'email package is not installed' };
+  }
+
+  if (!smtpEmail || !smtpPassword || !ownerEmail) {
+    logActivity('EMAIL_NOTIFICATION_SKIPPED missing_smtp_env');
+    return { sent: false, reason: 'email environment variables are missing' };
+  }
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -130,17 +138,20 @@ async function sendOwnerEmail(subject, text) {
       subject,
       text
     });
+    logActivity(`EMAIL_NOTIFICATION_SENT ${ownerEmail}`);
+    return { sent: true };
   } catch (error) {
     logActivity(`EMAIL_NOTIFICATION_FAILED ${error.message}`);
+    return { sent: false, reason: 'email provider rejected the message' };
   }
 }
 
 async function notifyOwner(subject, text) {
-  await sendOwnerEmail(subject, text);
+  const emailResult = await sendOwnerEmail(subject, text);
 
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!botToken || !chatId || typeof fetch !== 'function') return;
+  if (!botToken || !chatId || typeof fetch !== 'function') return emailResult;
 
   try {
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -151,6 +162,8 @@ async function notifyOwner(subject, text) {
   } catch (error) {
     logActivity(`TELEGRAM_NOTIFICATION_FAILED ${error.message}`);
   }
+
+  return emailResult;
 }
 
 function readBody(req, callback) {
@@ -233,7 +246,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/register') {
-    readBody(req, (error, data) => {
+    readBody(req, async (error, data) => {
       try {
         if (error) throw error;
         const { name, email, password } = data;
@@ -261,7 +274,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/login') {
-    readBody(req, (error, data) => {
+    readBody(req, async (error, data) => {
       try {
         if (error) throw error;
         const { email, password } = data;
@@ -293,7 +306,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/bookings') {
-    readBody(req, (error, data) => {
+    readBody(req, async (error, data) => {
       try {
         if (error) throw error;
         const name = String(data.name || '').trim();
@@ -309,11 +322,17 @@ const server = http.createServer((req, res) => {
         bookings.unshift(booking);
         writeJsonArray(BOOKINGS_FILE, bookings);
         logActivity(`BOOKING ${name} (${phone}) - ${plan}`);
-        void notifyOwner(
+        const notification = await notifyOwner(
           'New Friends Gym booking',
           `Name: ${name}\nPhone: ${phone}\nPlan: ${plan}`
         );
-        sendJson(res, 201, { message: 'Callback request saved. Friends Gym will contact you soon.', booking });
+        sendJson(res, 201, {
+          message: notification?.sent
+            ? 'Callback request saved. Email notification sent.'
+            : 'Callback request saved. Email notification not sent. Check Render email settings.',
+          booking,
+          notification
+        });
       } catch {
         sendJson(res, 400, { message: 'Invalid request data.' });
       }
@@ -322,7 +341,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'POST' && reqUrl.pathname === '/api/contact') {
-    readBody(req, (error, data) => {
+    readBody(req, async (error, data) => {
       try {
         if (error) throw error;
         const name = String(data.name || '').trim();
@@ -338,11 +357,17 @@ const server = http.createServer((req, res) => {
         messages.unshift(contact);
         writeJsonArray(MESSAGES_FILE, messages);
         logActivity(`CONTACT ${name} (${email})`);
-        void notifyOwner(
+        const notification = await notifyOwner(
           'New Friends Gym message',
           `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
         );
-        sendJson(res, 201, { message: 'Message saved. The team will review it shortly.', contact });
+        sendJson(res, 201, {
+          message: notification?.sent
+            ? 'Message saved. Email notification sent.'
+            : 'Message saved. Email notification not sent. Check Render email settings.',
+          contact,
+          notification
+        });
       } catch {
         sendJson(res, 400, { message: 'Invalid request data.' });
       }
