@@ -9,6 +9,59 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
 
+  const screenHistory = ['home-screen'];
+  const navMap = {
+    'home-screen': 'nav-home',
+    'workout-screen': 'nav-workout',
+    'nutrition-screen': 'nav-nutrition',
+    'tools-screen': null,
+    'plans-screen': null,
+    'profile-screen': 'nav-profile',
+    'contact-screen': null
+  };
+
+  const showScreen = (screenId, pushHistory = true) => {
+    const target = document.getElementById(screenId);
+    if (!target || !target.classList.contains('screen')) return;
+    const current = document.querySelector('.screen.active');
+    if (current && current.id === screenId) return;
+    document.querySelectorAll('.screen').forEach((screen) => screen.classList.remove('active'));
+    target.classList.add('active');
+    if (pushHistory && (!screenHistory.length || screenHistory[screenHistory.length - 1] !== screenId)) {
+      screenHistory.push(screenId);
+    }
+    document.querySelectorAll('.nav-icon').forEach((item) => item.classList.remove('active'));
+    const navId = navMap[screenId];
+    if (navId) {
+      const navItem = document.getElementById(navId);
+      if (navItem) navItem.classList.add('active');
+    }
+    target.scrollTop = 0;
+  };
+
+  window.showScreen = showScreen;
+
+  document.querySelectorAll('[data-screen]').forEach((item) => {
+    item.addEventListener('click', (event) => {
+      event.preventDefault();
+      showScreen(item.dataset.screen);
+    });
+    item.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        showScreen(item.dataset.screen);
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-back]').forEach((button) => {
+    button.addEventListener('click', () => {
+      screenHistory.pop();
+      const previous = screenHistory[screenHistory.length - 1] || 'home-screen';
+      showScreen(previous, false);
+    });
+  });
+
   if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   }

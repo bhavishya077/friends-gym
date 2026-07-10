@@ -1,372 +1,167 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Friends Gym Mobile App | Fitness Coaching, BMI Tools, and Smart Plans</title>
-    <meta name="description" content="Friends Gym offers modern fitness coaching, video workouts, BMI tools, meal planning, and a fully responsive training experience." />
-    <meta name="keywords" content="gym, fitness, workout tracker, bmi calculator, diet planner, personal training, healthy lifestyle" />
+    <title>Friends Gym App | Workout, Diet, BMI and Booking</title>
+    <meta name="description" content="Friends Gym mobile app experience with workout tracking, diet planner, BMI tools, session timer, pricing, booking, and contact." />
     <meta name="theme-color" content="#F4F5F8" />
     <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="https://example.com/index.html" />
-    <meta property="og:title" content="Friends Gym | Smart Fitness Experience" />
-    <meta property="og:description" content="Discover a premium fitness website with advanced tools and immersive features." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80" />
-    <meta name="twitter:card" content="summary_large_image" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=12" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Gym",
-        "name": "Friends Gym",
-        "description": "A modern gym and fitness website with coaching, workout tracking, BMI tools, and diet planning.",
-        "url": "https://example.com",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "123 Fitness Avenue",
-          "addressLocality": "Downtown City"
-        }
-      }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Poppins:wght@600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css?v=13" />
   </head>
-  <body>
-    <header class="site-header">
-      <div class="container nav-bar">
-        <a href="#home" class="brand"><span class="brand-mark"></span> Friends <span class="accent">Gym</span></a>
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">Light</button>
-        <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">Menu</button>
-        <div class="nav-links">
-          <a href="#home" class="active">Home</a>
-          <a href="#gallery">Classes</a>
-          <a href="#tools">Tools</a>
-          <a href="#pricing">Plans</a>
-          <a href="#dashboard">Dashboard</a>
-          <a href="#contact">Contact</a>
-        </div>
-      </div>
-    </header>
+  <body class="app-body">
+    <div class="phone" id="app-shell">
+      <main class="app-main">
+        <section class="screen active" id="home-screen" data-title="Home">
+          <div class="topbar">
+            <button class="icon-btn" type="button" data-screen="profile-screen" aria-label="Open profile">Menu</button>
+            <h1>Home</h1>
+            <div class="avatar">FG</div>
+          </div>
+          <div class="greeting">
+            <p>Hi Friend,</p>
+            <h2>Let's Get In Shape</h2>
+          </div>
+          <div class="hero-card" data-screen="workout-screen" role="button" tabindex="0">
+            <span class="pill-tag">Entry Level</span>
+            <h3>Full Body Strength</h3>
+            <p>Track steps, workout time, live timer, and calories burned in gym.</p>
+            <div class="play-row"><div class="play-btn">Start</div><span>34 Minutes</span></div>
+          </div>
+          <div class="section-head"><h4>Popular Exercises</h4><button type="button" data-screen="workout-screen">View All</button></div>
+          <div class="exercise-row">
+            <button class="exercise-card" type="button" data-screen="workout-screen"><div class="badge">W</div><h5>Dumbbell Rows</h5><p>Strength circuit</p></button>
+            <button class="exercise-card" type="button" data-screen="workout-screen"><div class="badge orange-bg">S</div><h5>Squat Training</h5><p>Leg day tracker</p></button>
+          </div>
+          <div class="section-head"><h4>Nutrition Today</h4><button type="button" data-screen="nutrition-screen">Open</button></div>
+          <div class="exercise-row">
+            <button class="exercise-card wide" type="button" data-screen="nutrition-screen"><div class="badge teal-bg">N</div><h5>Diet Planner</h5><p>Generate breakfast, lunch, dinner and macros.</p></button>
+          </div>
+          <div class="section-head"><h4>Membership</h4><button type="button" data-screen="plans-screen">Plans</button></div>
+          <div class="exercise-row">
+            <button class="exercise-card" type="button" data-screen="plans-screen"><div class="badge">P</div><h5>Pricing</h5><p>View plans</p></button>
+            <button class="exercise-card" type="button" data-screen="contact-screen"><div class="badge orange-bg">B</div><h5>Book Visit</h5><p>Request callback</p></button>
+          </div>
+          <div class="exercise-row">
+            <button class="exercise-card wide" id="install-app" type="button"><div class="badge teal-bg">I</div><h5>Install App</h5><p>Add Friends Gym to your phone home screen.</p></button>
+          </div>
+        </section>
 
-    <main id="home">
-      <section class="hero">
-        <video class="hero-video" autoplay muted loop playsinline poster="pexels-arturo-eg-22214041-6628962.jpg">
-          <source src="assets/hero-lift.mp4" type="video/mp4" />
-        </video>
-        <div class="hero-gradient"></div>
-        <div class="container hero-inner">
-        <div class="hero-copy">
-          <div class="app-topline">
-            <button class="icon-button" type="button" aria-label="Open menu">Menu</button>
-            <span>Friends Gym</span>
-            <span class="avatar" aria-label="User avatar">FG</span>
+        <section class="screen" id="workout-screen" data-title="Workout">
+          <div class="topbar">
+            <button class="icon-btn back-btn" type="button" data-back>Back</button>
+            <h1>Workout</h1>
+            <div class="avatar">FG</div>
           </div>
-          <span class="eyebrow">Hi Friend,</span>
-          <h1 class="split-headline">Let's train today</h1>
-          <p>Modern gym tools, workout tracking, smart diet planning, and real progress support in one soft mobile-style fitness app.</p>
-          <div class="hero-actions">
-            <a href="#tools" class="btn btn-primary">Get info</a>
-            <a href="#pricing" class="btn btn-secondary">Our plans</a>
-            <button class="btn btn-secondary install-button" id="install-app" type="button">Install app</button>
+          <div class="day-strip">
+            <div class="day"><span>M</span><div class="dot">13</div></div><div class="day"><span>T</span><div class="dot">14</div></div><div class="day active"><span>W</span><div class="dot">15</div></div><div class="day"><span>T</span><div class="dot">16</div></div><div class="day"><span>F</span><div class="dot">17</div></div><div class="day"><span>S</span><div class="dot">18</div></div><div class="day"><span>S</span><div class="dot">19</div></div>
           </div>
-          <div class="featured-card">
-            <span class="pill">Medium difficulty</span>
-            <h2>Full body strength flow</h2>
-            <p>45 min workout with warm-up, strength circuit, and recovery.</p>
-            <a href="#tools" class="play-button" aria-label="Start workout">Start</a>
-          </div>
-          <div class="stats">
-            <div class="stat"><strong data-count="24">24</strong><span>Access</span></div>
-            <div class="stat"><strong data-count="12">12</strong><span>Classes</span></div>
-            <div class="stat"><strong data-count="200">200</strong><span>Members</span></div>
-          </div>
-        </div>
+          <div class="stat-row"><div class="stat-icon orange-bg">S</div><div class="info"><h5>Walking</h5><p>Today in gym</p></div><div class="value"><b id="session-row-steps">0</b><span>Steps</span></div></div>
+          <div class="stat-row"><div class="stat-icon purple-bg">T</div><div class="info"><h5>Workout</h5><p>Live session timer</p></div><div class="value"><b id="session-row-time">0m</b><span>minutes</span></div></div>
+          <div class="stat-row"><div class="stat-icon teal-bg">K</div><div class="info"><h5>Calories Burned</h5><p>Calculated from session</p></div><div class="value"><b id="session-row-calories">0</b><span>kcal</span></div></div>
 
-        <div class="hero-media">
-          <img src="pexels-arturo-eg-22214041-6628962.jpg" alt="Gym barbell and kettlebell" />
-          <div class="video-overlay"></div>
-        </div>
-        </div>
-      </section>
-
-      <section id="gallery" class="container motion-section">
-        <span class="section-kicker">Recommended</span>
-        <h2 class="section-title split-headline">Popular workouts</h2>
-        <p class="section-subtitle">Horizontal app cards with real training clips, quick class names, and compact workout details.</p>
-        <div class="gallery-grid">
-          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Gym training floor" /><div class="class-label"><span>Strength</span><h3>Weightlifting</h3></div></div>
-          <div class="gallery-card"><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="People lifting weights" /><div class="class-label"><span>Cardio</span><h3>Indoor cycling</h3></div></div>
-          <div class="gallery-card video-card">
-            <video autoplay muted loop playsinline preload="metadata" poster="pexels-arturo-eg-22214041-6628962.jpg">
-              <source src="assets/bench-press.mp4" type="video/mp4" />
-            </video>
-            <div class="class-label"><span>Power</span><h3>Bench press</h3></div>
-          </div>
-          <div class="gallery-card video-card">
-            <video autoplay muted loop playsinline preload="metadata" poster="pexels-warrecreates-32233887.jpg">
-              <source src="assets/battle-ropes.mp4" type="video/mp4" />
-            </video>
-            <div class="class-label"><span>Training</span><h3>Battle ropes</h3></div>
-          </div>
-        </div>
-      </section>
-
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track">
-          <span>Power. Discipline. Progress.</span>
-          <span>Friends Gym class flow</span>
-          <span>Strength / Cardio / Recovery / Focus</span>
-          <span>Power. Discipline. Progress.</span>
-          <span>Friends Gym class flow</span>
-          <span>Strength / Cardio / Recovery / Focus</span>
-        </div>
-      </div>
-
-      <section id="tools" class="container motion-section">
-        <span class="section-kicker">Why choose us?</span>
-        <h2 class="section-title split-headline">Built-in fitness tools</h2>
-        <p class="section-subtitle">These practical tools keep your website useful while making it feel more advanced and valuable.</p>
-        <div class="grid grid-3">
-          <div class="card glass tool-card">
-            <span class="badge-icon purple">B</span>
-            <h3>BMI calculator</h3>
-            <form id="bmi-form" class="stack">
-              <input id="height" type="number" placeholder="Height in cm" required />
-              <input id="weight" type="number" placeholder="Weight in kg" required />
-              <input id="age" type="number" placeholder="Age" required />
-              <input type="hidden" id="gender" value="male" />
-              <div class="segmented-control" data-segmented="gender" role="tablist" aria-label="Gender">
-                <button class="segment active" type="button" data-value="male" aria-pressed="true">Male</button>
-                <button class="segment" type="button" data-value="female" aria-pressed="false">Female</button>
-              </div>
-              <button class="btn btn-primary" type="submit">Calculate BMI & Calories</button>
-            </form>
-            <div id="bmi-result" class="result-box">Your BMI result and daily calorie estimate will appear here.</div>
-          </div>
-
-          <div class="card glass tool-card nutrition-card">
-            <span class="badge-icon orange">N</span>
-            <h3>Nutrition planner</h3>
-            <div class="nutrition-overview">
-              <svg class="progress-ring" viewBox="0 0 120 120" aria-label="Nutrition progress">
-                <circle class="ring-bg" cx="60" cy="60" r="48"></circle>
-                <circle class="ring protein" cx="60" cy="60" r="48"></circle>
-                <circle class="ring carbs" cx="60" cy="60" r="48"></circle>
-                <circle class="ring fat" cx="60" cy="60" r="48"></circle>
-                <text x="60" y="56" text-anchor="middle">Plan</text>
-                <text x="60" y="76" text-anchor="middle">kcal</text>
-              </svg>
-              <div class="macro-legend">
-                <span><i class="dot purple-dot"></i>Protein</span>
-                <span><i class="dot orange-dot"></i>Carbs</span>
-                <span><i class="dot teal-dot"></i>Fat</span>
-              </div>
-            </div>
-            <form id="diet-form" class="stack">
-              <input type="hidden" id="goal" value="lose" />
-              <div class="segmented-control" data-segmented="goal" role="tablist" aria-label="Diet goal">
-                <button class="segment active" type="button" data-value="lose" aria-pressed="true">Lose</button>
-                <button class="segment" type="button" data-value="maintain" aria-pressed="false">Maintain</button>
-                <button class="segment" type="button" data-value="gain" aria-pressed="false">Gain</button>
-              </div>
-              <input id="calories" type="number" placeholder="Daily calories target" required />
-              <button class="btn btn-primary" type="submit">Generate plan</button>
-            </form>
-            <div id="diet-result" class="result-box">A meal plan will appear here.</div>
-          </div>
-
-          <div class="card glass tool-card" id="login">
-            <span class="badge-icon teal">U</span>
-            <h3 id="auth-title">Login / Register</h3>
-            <div class="auth-tabs">
-              <button class="auth-tab active" type="button" data-mode="login">Login</button>
-              <button class="auth-tab" type="button" data-mode="register">Register</button>
-            </div>
-            <form id="auth-form" class="stack">
-              <input id="auth-name" type="text" placeholder="Name" />
-              <input id="auth-email" type="email" placeholder="Email" required />
-              <input id="auth-password" type="password" placeholder="Password" required />
-              <button class="btn btn-primary" type="submit">Continue</button>
-            </form>
-            <button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button>
-            <p id="auth-message" class="result-box">Create an account or sign in to access member features.</p>
-          </div>
-
-          <div class="card glass tool-card">
-            <span class="badge-icon purple">W</span>
-            <h3>Workout tracker</h3>
-            <p class="card-note">Track today's training and keep your dashboard current.</p>
+          <div class="app-card">
+            <div class="section-head"><h4>Workout Checklist</h4><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
             <div class="tracker-list">
               <label class="tracker-item"><input type="checkbox" data-workout value="Warm-up" /> Warm-up and mobility</label>
               <label class="tracker-item"><input type="checkbox" data-workout value="Strength" /> Strength circuit</label>
               <label class="tracker-item"><input type="checkbox" data-workout value="Cardio" /> Cardio finisher</label>
               <label class="tracker-item"><input type="checkbox" data-workout value="Stretch" /> Cooldown stretch</label>
             </div>
-            <div class="result-box"><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
           </div>
 
-          <div class="card glass session-card tool-card">
-            <span class="badge-icon orange">T</span>
-            <h3>Gym session tracker</h3>
-            <div class="week-strip" aria-label="Training week">
-              <span>M</span><span>T</span><span>W</span><span class="active-day">T</span><span>F</span><span>S</span><span>S</span>
-            </div>
-            <div class="stat-row-list">
-              <div class="stat-row"><span class="badge-icon purple">S</span><div><b>Steps</b><small>Today in gym</small></div><strong id="session-row-steps">0</strong></div>
-              <div class="stat-row"><span class="badge-icon teal">K</span><div><b>Burn</b><small>Workout calories</small></div><strong id="session-row-calories">0</strong></div>
-              <div class="stat-row"><span class="badge-icon orange">T</span><div><b>Time</b><small>Gym session</small></div><strong id="session-row-time">0m</strong></div>
-            </div>
-            <p class="card-note">Track steps, workout calories, and total gym time.</p>
-            <form id="session-form" class="stack">
+          <div class="app-card session-card">
+            <div class="section-head"><h4>Gym Session</h4><span id="live-session-time">00:00</span></div>
+            <form id="session-form" class="stack form-plain">
               <input id="session-steps" type="number" min="0" step="100" placeholder="Steps walked in gym" required />
               <input id="session-minutes" type="number" min="1" step="1" placeholder="Workout time in minutes" required />
-              <select id="session-workout">
-                <option value="strength">Strength training</option>
-                <option value="cardio">Cardio</option>
-                <option value="hiit">HIIT</option>
-                <option value="mobility">Mobility</option>
-              </select>
+              <select id="session-workout"><option value="strength">Strength training</option><option value="cardio">Cardio</option><option value="hiit">HIIT</option><option value="mobility">Mobility</option></select>
               <input type="hidden" id="session-intensity" value="moderate" />
-              <div class="segmented-control" data-segmented="session-intensity" role="tablist" aria-label="Workout intensity">
-                <button class="segment" type="button" data-value="light" aria-pressed="false">Light</button>
-                <button class="segment active" type="button" data-value="moderate" aria-pressed="true">Moderate</button>
-                <button class="segment" type="button" data-value="hard" aria-pressed="false">Hard</button>
-              </div>
-              <div class="timer-controls">
-                <button class="btn btn-secondary" id="start-session" type="button">Start timer</button>
-                <button class="btn btn-secondary" id="stop-session" type="button">Stop</button>
-              </div>
+              <div class="segmented-control" data-segmented="session-intensity" role="tablist" aria-label="Workout intensity"><button class="segment" type="button" data-value="light" aria-pressed="false">Light</button><button class="segment active" type="button" data-value="moderate" aria-pressed="true">Moderate</button><button class="segment" type="button" data-value="hard" aria-pressed="false">Hard</button></div>
+              <div class="timer-controls"><button class="btn btn-secondary" id="start-session" type="button">Start timer</button><button class="btn btn-secondary" id="stop-session" type="button">Stop</button></div>
               <button class="btn btn-primary" type="submit">Calculate session</button>
               <button class="btn btn-secondary" id="reset-session" type="button">Reset session</button>
             </form>
-            <div class="session-summary">
-              <div><strong id="live-session-time">00:00</strong><span>Live timer</span></div>
-              <div><strong id="session-calories">0</strong><span>Calories</span></div>
-              <div><strong id="session-distance">0.00 km</strong><span>Distance</span></div>
-            </div>
+            <div class="session-summary"><div><strong id="session-calories">0</strong><span>Calories</span></div><div><strong id="session-distance">0.00 km</strong><span>Distance</span></div></div>
             <div id="session-result" class="result-box">Enter your workout details to see the result.</div>
           </div>
+        </section>
 
-          <div class="card glass tool-card">
-            <span class="badge-icon teal">P</span>
-            <h3>Book a visit</h3>
-            <form id="booking-form" class="stack">
-              <input id="booking-name" type="text" placeholder="Your name" required />
-              <input id="booking-phone" type="tel" placeholder="Phone number" required />
-              <select id="booking-plan">
-                <option value="Starter">Starter trial</option>
-                <option value="Pro">Pro coaching</option>
-                <option value="Elite">Elite membership</option>
-              </select>
-              <button class="btn btn-primary" type="submit">Request callback</button>
+        <section class="screen" id="nutrition-screen" data-title="Nutrition">
+          <div class="topbar"><button class="icon-btn back-btn" type="button" data-back>Back</button><h1>Nutrition</h1><div class="avatar">FG</div></div>
+          <div class="ring-card">
+            <svg width="90" height="90" viewBox="0 0 36 36" aria-label="Nutrition macro progress"><circle cx="18" cy="18" r="15.5" fill="none" stroke="#F0F0F4" stroke-width="3"></circle><circle cx="18" cy="18" r="15.5" fill="none" stroke="#7B3FF2" stroke-width="3" stroke-dasharray="35 65" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 18 18)"></circle><circle cx="18" cy="18" r="15.5" fill="none" stroke="#F0733D" stroke-width="3" stroke-dasharray="20 80" stroke-dashoffset="-35" stroke-linecap="round" transform="rotate(-90 18 18)"></circle><circle cx="18" cy="18" r="15.5" fill="none" stroke="#2AC0A0" stroke-width="3" stroke-dasharray="13 87" stroke-dashoffset="-55" stroke-linecap="round" transform="rotate(-90 18 18)"></circle></svg>
+            <div class="legend"><div class="item"><div class="dot purple-dot"></div><span>Protein <b>324 of 640</b></span></div><div class="item"><div class="dot orange-dot"></div><span>Carbs <b>124 of 250</b></span></div><div class="item"><div class="dot teal-dot"></div><span>Fat <b>84 of 160</b></span></div></div>
+          </div>
+          <div class="app-card">
+            <div class="section-head"><h4>Generate Diet Plan</h4></div>
+            <form id="diet-form" class="stack form-plain">
+              <input type="hidden" id="goal" value="lose" />
+              <div class="segmented-control" data-segmented="goal" role="tablist" aria-label="Diet goal"><button class="segment active" type="button" data-value="lose" aria-pressed="true">Lose</button><button class="segment" type="button" data-value="maintain" aria-pressed="false">Maintain</button><button class="segment" type="button" data-value="gain" aria-pressed="false">Gain</button></div>
+              <input id="calories" type="number" placeholder="Daily calories target" required />
+              <button class="btn btn-primary" type="submit">Generate plan</button>
             </form>
-            <div id="booking-result" class="result-box">Send a callback request to the gym team.</div>
+            <div id="diet-result" class="result-box">A meal plan will appear here.</div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="pricing" class="container pricing-section motion-section">
-        <span class="section-kicker">Our Plan</span>
-        <h2 class="section-title split-headline">Choose your pricing plan</h2>
-        <div class="pricing-grid">
-          <article class="pricing-card">
-            <h3>Class drop-in</h3>
-            <strong class="price">Rs 399</strong>
-            <span class="price-label">Single class</span>
-            <ul>
-              <li>Free fitness check</li>
-              <li>Unlimited equipment access</li>
-              <li>Trainer guidance</li>
-              <li>No time restriction</li>
-            </ul>
-            <a class="btn btn-secondary" href="#contact">Enroll now</a>
-          </article>
-          <article class="pricing-card featured">
-            <h3>12 Month unlimited</h3>
-            <strong class="price">Rs 9999</strong>
-            <span class="price-label">Best value</span>
-            <ul>
-              <li>Personal training support</li>
-              <li>Diet planning tools</li>
-              <li>Workout tracking</li>
-              <li>Priority callback</li>
-            </ul>
-            <a class="btn btn-primary" href="#contact">Enroll now</a>
-          </article>
-          <article class="pricing-card">
-            <h3>6 Month unlimited</h3>
-            <strong class="price">Rs 5999</strong>
-            <span class="price-label">Popular plan</span>
-            <ul>
-              <li>Strength and cardio access</li>
-              <li>BMI and calorie calculator</li>
-              <li>Session dashboard</li>
-              <li>Flexible timing</li>
-            </ul>
-            <a class="btn btn-secondary" href="#contact">Enroll now</a>
-          </article>
-        </div>
-      </section>
-
-      <section id="dashboard" class="container motion-section">
-        <div class="card glass admin-dashboard">
-          <h3 id="dashboard-title" class="split-headline">Member dashboard overview</h3>
-          <div class="metrics">
-            <div class="metric"><span class="badge-icon purple">M</span><strong id="member-count">240+</strong><span>Members</span></div>
-            <div class="metric"><span class="badge-icon orange">S</span><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
-            <div class="metric"><span class="badge-icon teal">K</span><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div>
-            <div class="metric"><span class="badge-icon purple">T</span><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
+        <section class="screen" id="tools-screen" data-title="Tools">
+          <div class="topbar"><button class="icon-btn back-btn" type="button" data-back>Back</button><h1>Tools</h1><div class="avatar">FG</div></div>
+          <div class="section-head"><h4>Body Tools</h4></div>
+          <div class="exercise-row"><button class="exercise-card" type="button" data-screen="tools-screen"><div class="badge">B</div><h5>BMI Calculator</h5><p>Body mass + calories</p></button><button class="exercise-card" type="button" data-screen="nutrition-screen"><div class="badge orange-bg">N</div><h5>Diet Planner</h5><p>Meal plan generator</p></button></div>
+          <div class="app-card">
+            <h3>BMI calculator</h3>
+            <form id="bmi-form" class="stack form-plain">
+              <input id="height" type="number" placeholder="Height in cm" required />
+              <input id="weight" type="number" placeholder="Weight in kg" required />
+              <input id="age" type="number" placeholder="Age" required />
+              <input type="hidden" id="gender" value="male" />
+              <div class="segmented-control" data-segmented="gender" role="tablist" aria-label="Gender"><button class="segment active" type="button" data-value="male" aria-pressed="true">Male</button><button class="segment" type="button" data-value="female" aria-pressed="false">Female</button></div>
+              <button class="btn btn-primary" type="submit">Calculate BMI & Calories</button>
+            </form>
+            <div id="bmi-result" class="result-box">Your BMI result and daily calorie estimate will appear here.</div>
           </div>
-          <ul class="activity-list">
-            <li>Track your daily steps, workout time, and calories after every gym session.</li>
-            <li>Use BMI and diet planner together for better progress planning.</li>
-            <li>Book a visit when you want personal coaching support.</li>
-          </ul>
-        </div>
-      </section>
+          <div class="section-head"><h4>More</h4></div>
+          <div class="exercise-row"><button class="exercise-card" type="button" data-screen="plans-screen"><div class="badge teal-bg">P</div><h5>Pricing Plans</h5><p>View membership</p></button><button class="exercise-card" type="button" data-screen="profile-screen"><div class="badge">D</div><h5>Dashboard</h5><p>Stats & login</p></button></div>
+        </section>
 
-      <section id="contact" class="container contact-grid motion-section">
-        <div>
-          <h2 class="section-title split-headline">Ready to join the next level?</h2>
-          <p class="section-subtitle">Visit us for a free trial session and discover how much easier fitness can feel with the right tools behind it.</p>
-          <div class="card glass">
-            <h3>Contact details</h3>
-            <p>Pno- 72, Sirsi marg, Engineer Colony, Bisnwala, Jaipur, Rajasthan 302034<br />Email: hello@friendsgym.com<br />Phone: +1 (555) 123-4567</p>
-          </div>
-        </div>
+        <section class="screen" id="plans-screen" data-title="Plans">
+          <div class="topbar"><button class="icon-btn back-btn" type="button" data-back>Back</button><h1>Plans</h1><div class="avatar">FG</div></div>
+          <article class="pricing-card"><h3>Class drop-in</h3><strong class="price">Rs 399</strong><span class="price-label">Single class</span><ul><li>Free fitness check</li><li>Unlimited equipment access</li><li>Trainer guidance</li><li>No time restriction</li></ul><button class="btn btn-secondary" type="button" data-screen="contact-screen">Enroll now</button></article>
+          <article class="pricing-card featured"><h3>12 Month unlimited</h3><strong class="price">Rs 9999</strong><span class="price-label">Best value</span><ul><li>Personal training support</li><li>Diet planning tools</li><li>Workout tracking</li><li>Priority callback</li></ul><button class="btn btn-primary" type="button" data-screen="contact-screen">Enroll now</button></article>
+          <article class="pricing-card"><h3>6 Month unlimited</h3><strong class="price">Rs 5999</strong><span class="price-label">Popular plan</span><ul><li>Strength and cardio access</li><li>BMI and calorie calculator</li><li>Session dashboard</li><li>Flexible timing</li></ul><button class="btn btn-secondary" type="button" data-screen="contact-screen">Enroll now</button></article>
+        </section>
 
-        <form class="glass-form" id="contact-form">
-          <input id="contact-name" type="text" placeholder="Your name" required />
-          <input id="contact-email" type="email" placeholder="Your email" required />
-          <textarea id="contact-message" placeholder="Tell us about your goals" required></textarea>
-          <button class="btn btn-primary" type="submit">Send message</button>
-          <div id="contact-result" class="result-box">Messages are saved for the gym team.</div>
-        </form>
-      </section>
-    </main>
+        <section class="screen" id="profile-screen" data-title="Profile">
+          <div class="topbar"><button class="icon-btn back-btn" type="button" data-back>Back</button><h1>Profile</h1><div class="avatar">FG</div></div>
+          <div class="app-card admin-dashboard"><h3 id="dashboard-title">Member dashboard overview</h3><div class="metrics"><div class="metric"><span class="badge-icon purple">M</span><strong id="member-count">240+</strong><span>Members</span></div><div class="metric"><span class="badge-icon orange">S</span><strong id="dashboard-steps">0</strong><span>Steps Today</span></div><div class="metric"><span class="badge-icon teal">K</span><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div><div class="metric"><span class="badge-icon purple">T</span><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div></div></div>
+          <div class="app-card" id="login"><h3 id="auth-title">Login / Register</h3><div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Login</button><button class="auth-tab" type="button" data-mode="register">Register</button></div><form id="auth-form" class="stack form-plain"><input id="auth-name" type="text" placeholder="Name" /><input id="auth-email" type="email" placeholder="Email" required /><input id="auth-password" type="password" placeholder="Password" required /><button class="btn btn-primary" type="submit">Continue</button></form><button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button><p id="auth-message" class="result-box">Create an account or sign in to access member features.</p></div>
+        </section>
 
-    <nav class="mobile-tabbar bottom-nav" aria-label="Mobile app navigation">
-      <a href="#home" class="active" aria-label="Home">H<span>Home</span></a>
-      <a href="#tools" aria-label="Tools">T<span>Tools</span></a>
-      <a class="fab" href="#booking-form" aria-label="Book visit">+</a>
-      <a href="#dashboard" aria-label="Stats">S<span>Stats</span></a>
-      <a href="#contact" aria-label="Contact">I<span>Inbox</span></a>
-    </nav>
+        <section class="screen" id="contact-screen" data-title="Contact">
+          <div class="topbar"><button class="icon-btn back-btn" type="button" data-back>Back</button><h1>Contact</h1><div class="avatar">FG</div></div>
+          <div class="app-card"><h3>Book a visit</h3><form id="booking-form" class="stack form-plain"><input id="booking-name" type="text" placeholder="Your name" required /><input id="booking-phone" type="tel" placeholder="Phone number" required /><select id="booking-plan"><option value="Starter">Starter trial</option><option value="Pro">Pro coaching</option><option value="Elite">Elite membership</option></select><button class="btn btn-primary" type="submit">Request callback</button></form><div id="booking-result" class="result-box">Send a callback request to the gym team.</div></div>
+          <div class="app-card"><h3>Contact details</h3><p>Pno- 72, Sirsi marg, Engineer Colony, Bisnwala, Jaipur, Rajasthan 302034<br />Email: hello@friendsgym.com<br />Phone: +1 (555) 123-4567</p></div>
+          <form class="app-card form-plain" id="contact-form"><input id="contact-name" type="text" placeholder="Your name" required /><input id="contact-email" type="email" placeholder="Your email" required /><textarea id="contact-message" placeholder="Tell us about your goals" required></textarea><button class="btn btn-primary" type="submit">Send message</button><div id="contact-result" class="result-box">Messages are saved for the gym team.</div></form>
+        </section>
+      </main>
 
-    <footer>
-      <div class="container">
-        <p>&copy; <span id="year"></span> Friends Gym. Built for stronger days.</p>
-      </div>
-    </footer>
+      <nav class="bottom-nav" aria-label="App navigation">
+        <button class="nav-icon active" id="nav-home" type="button" data-screen="home-screen">H</button>
+        <button class="nav-icon" id="nav-workout" type="button" data-screen="workout-screen">W</button>
+        <button class="fab" type="button" data-screen="tools-screen">+</button>
+        <button class="nav-icon" id="nav-nutrition" type="button" data-screen="nutrition-screen">N</button>
+        <button class="nav-icon" id="nav-profile" type="button" data-screen="profile-screen">P</button>
+      </nav>
+    </div>
+    <p class="caption">Friends Gym app preview. Use the bottom bar to move page to page.</p>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="script.js?v=12"></script>
+    <script src="script.js?v=13"></script>
   </body>
 </html>
-
