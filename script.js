@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await client.auth.signInWithOAuth({ provider: 'google' });
         return;
       }
-      showAuthToast('Add Supabase URL and anon key to enable Google sign-in.');
+      showAuthToast('Google sign-in abhi setup nahi hai. Email/password se sign in karein.');
     });
   }
   if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
     if (savedUser) {
       setLoggedInUser(savedUser);
-      authMessage.textContent = 'You are signed in on this device.';
+      authMessage.textContent = 'You are signed in on this device. Logout only appears because this browser already has a saved session.';
     }
 
     authTabs.forEach((tab) => {
