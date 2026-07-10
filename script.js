@@ -269,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const dashboardSteps = document.getElementById('dashboard-steps');
   const dashboardCalories = document.getElementById('dashboard-calories');
   const dashboardTime = document.getElementById('dashboard-time');
+  const sessionRowSteps = document.getElementById('session-row-steps');
+  const sessionRowCalories = document.getElementById('session-row-calories');
+  const sessionRowTime = document.getElementById('session-row-time');
   const startSession = document.getElementById('start-session');
   const stopSession = document.getElementById('stop-session');
   const resetSession = document.getElementById('reset-session');
@@ -301,6 +304,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardSteps) dashboardSteps.textContent = session.steps.toLocaleString();
     if (dashboardCalories) dashboardCalories.textContent = `${session.calories} kcal`;
     if (dashboardTime) dashboardTime.textContent = `${session.minutes} min`;
+    if (sessionRowSteps) sessionRowSteps.textContent = session.steps.toLocaleString();
+    if (sessionRowCalories) sessionRowCalories.textContent = `${session.calories}`;
+    if (sessionRowTime) sessionRowTime.textContent = `${session.minutes}m`;
     if (sessionCalories) sessionCalories.textContent = session.calories;
     if (sessionDistance) sessionDistance.textContent = `${session.distanceKm.toFixed(2)} km`;
     if (sessionResult) {
@@ -359,6 +365,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dashboardSteps) dashboardSteps.textContent = '0';
       if (dashboardCalories) dashboardCalories.textContent = '0 kcal';
       if (dashboardTime) dashboardTime.textContent = '0 min';
+      if (sessionRowSteps) sessionRowSteps.textContent = '0';
+      if (sessionRowCalories) sessionRowCalories.textContent = '0';
+      if (sessionRowTime) sessionRowTime.textContent = '0m';
       if (sessionResult) sessionResult.textContent = 'Session reset. Enter new workout details to calculate again.';
     });
   }
@@ -375,11 +384,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const calories = Math.round(caloriesValue);
-      let plan = '';
-      if (goal === 'lose') plan = 'Breakfast: Greek yogurt with berries, Lunch: grilled chicken salad, Dinner: baked fish with vegetables, Snack: apple + nuts.';
-      else if (goal === 'maintain') plan = 'Breakfast: oats with banana, Lunch: rice bowl with chicken, Dinner: pasta with lean protein, Snack: hummus and veggies.';
-      else plan = 'Breakfast: eggs with toast, Lunch: turkey wrap with rice, Dinner: steak with potatoes, Snack: protein shake.';
-      dietResult.innerHTML = `<strong>Plan for ${calories} kcal</strong><br>${plan}`;
+      const plans = {
+        lose: [
+          ['Breakfast', 'Greek yogurt bowl', 'Berries + seeds', Math.round(calories * 0.24)],
+          ['Lunch', 'Grilled chicken salad', 'Lean protein + greens', Math.round(calories * 0.34)],
+          ['Dinner', 'Baked fish plate', 'Vegetables + light carbs', Math.round(calories * 0.32)],
+          ['Snack', 'Apple + nuts', 'Fiber + healthy fats', Math.round(calories * 0.1)]
+        ],
+        maintain: [
+          ['Breakfast', 'Oats with banana', 'Milk + fruit', Math.round(calories * 0.25)],
+          ['Lunch', 'Chicken rice bowl', 'Rice + protein + salad', Math.round(calories * 0.35)],
+          ['Dinner', 'Lean protein pasta', 'Pasta + vegetables', Math.round(calories * 0.3)],
+          ['Snack', 'Hummus and veggies', 'Light evening snack', Math.round(calories * 0.1)]
+        ],
+        gain: [
+          ['Breakfast', 'Eggs with toast', 'High protein start', Math.round(calories * 0.26)],
+          ['Lunch', 'Turkey wrap with rice', 'Carbs + protein', Math.round(calories * 0.34)],
+          ['Dinner', 'Steak with potatoes', 'Strength meal', Math.round(calories * 0.3)],
+          ['Snack', 'Protein shake', 'Post-workout support', Math.round(calories * 0.1)]
+        ]
+      };
+      const macroHtml = `
+        <div class="macro-summary">
+          <span><i class="dot purple-dot"></i>${Math.round(calories * 0.28 / 4)}g protein</span>
+          <span><i class="dot orange-dot"></i>${Math.round(calories * 0.45 / 4)}g carbs</span>
+          <span><i class="dot teal-dot"></i>${Math.round(calories * 0.27 / 9)}g fat</span>
+        </div>`;
+      const meals = plans[goal].map(([meal, name, portion, kcal], index) => `
+        <details class="meal-card" ${index === 0 ? 'open' : ''}>
+          <summary><span>${meal}</span><strong>${kcal} kcal</strong></summary>
+          <div class="meal-line"><span class="badge-icon ${index % 3 === 0 ? 'purple' : index % 3 === 1 ? 'orange' : 'teal'}">${meal.charAt(0)}</span><div><b>${name}</b><small>${portion}</small></div></div>
+        </details>`).join('');
+      dietResult.innerHTML = `<strong>Plan for ${calories} kcal</strong>${macroHtml}<div class="meal-list">${meals}</div>`;
     });
   }
 

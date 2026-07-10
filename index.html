@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Friends Gym Mobile App | Fitness Coaching, BMI Tools, and Smart Plans</title>
     <meta name="description" content="Friends Gym offers modern fitness coaching, video workouts, BMI tools, meal planning, and a fully responsive training experience." />
     <meta name="keywords" content="gym, fitness, workout tracker, bmi calculator, diet planner, personal training, healthy lifestyle" />
-    <meta name="theme-color" content="#06070b" />
+    <meta name="theme-color" content="#F4F5F8" />
     <meta name="robots" content="index,follow" />
     <link rel="canonical" href="https://example.com/index.html" />
     <meta property="og:title" content="Friends Gym | Smart Fitness Experience" />
@@ -19,8 +19,7 @@
     <link rel="apple-touch-icon" href="icons/icon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
     <script type="application/ld+json">
       {
@@ -62,13 +61,24 @@
         <div class="hero-gradient"></div>
         <div class="container hero-inner">
         <div class="hero-copy">
-          <span class="eyebrow">Shape your body</span>
-          <h1 class="split-headline">Be strong training hard</h1>
-          <p>Train with modern equipment, practical fitness tools, workout tracking, smart diet planning, and real progress support at Friends Gym.</p>
+          <div class="app-topline">
+            <button class="icon-button" type="button" aria-label="Open menu">☰</button>
+            <span>Friends Gym</span>
+            <span class="avatar" aria-label="User avatar">FG</span>
+          </div>
+          <span class="eyebrow">Hi Friend,</span>
+          <h1 class="split-headline">Let's train today</h1>
+          <p>Modern gym tools, workout tracking, smart diet planning, and real progress support in one soft mobile-style fitness app.</p>
           <div class="hero-actions">
             <a href="#tools" class="btn btn-primary">Get info</a>
             <a href="#pricing" class="btn btn-secondary">Our plans</a>
             <button class="btn btn-secondary install-button" id="install-app" type="button">Install app</button>
+          </div>
+          <div class="featured-card">
+            <span class="pill">Medium difficulty</span>
+            <h2>Full body strength flow</h2>
+            <p>45 min workout with warm-up, strength circuit, and recovery.</p>
+            <a href="#tools" class="play-button" aria-label="Start workout">▶</a>
           </div>
           <div class="stats">
             <div class="stat"><strong data-count="24">24</strong><span>Access</span></div>
@@ -85,9 +95,9 @@
       </section>
 
       <section id="gallery" class="container motion-section">
-        <span class="section-kicker">Our Classes</span>
-        <h2 class="section-title split-headline">What we can offer</h2>
-        <p class="section-subtitle">Choose the training style that fits your goal and use the built-in tools below to track progress.</p>
+        <span class="section-kicker">Recommended</span>
+        <h2 class="section-title split-headline">Popular workouts</h2>
+        <p class="section-subtitle">Horizontal app cards with real training clips, quick class names, and compact workout details.</p>
         <div class="gallery-grid">
           <div class="gallery-card"><img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80" alt="Gym training floor" /><div class="class-label"><span>Strength</span><h3>Weightlifting</h3></div></div>
           <div class="gallery-card"><img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80" alt="People lifting weights" /><div class="class-label"><span>Cardio</span><h3>Indoor cycling</h3></div></div>
@@ -122,7 +132,8 @@
         <h2 class="section-title split-headline">Built-in fitness tools</h2>
         <p class="section-subtitle">These practical tools keep your website useful while making it feel more advanced and valuable.</p>
         <div class="grid grid-3">
-          <div class="card glass">
+          <div class="card glass tool-card">
+            <span class="badge-icon purple">⌁</span>
             <h3>BMI calculator</h3>
             <form id="bmi-form" class="stack">
               <input id="height" type="number" placeholder="Height in cm" required />
@@ -138,8 +149,24 @@
             <div id="bmi-result" class="result-box">Your BMI result and daily calorie estimate will appear here.</div>
           </div>
 
-          <div class="card glass">
-            <h3>Diet planner</h3>
+          <div class="card glass tool-card nutrition-card">
+            <span class="badge-icon orange">●</span>
+            <h3>Nutrition planner</h3>
+            <div class="nutrition-overview">
+              <svg class="progress-ring" viewBox="0 0 120 120" aria-label="Nutrition progress">
+                <circle class="ring-bg" cx="60" cy="60" r="48"></circle>
+                <circle class="ring protein" cx="60" cy="60" r="48"></circle>
+                <circle class="ring carbs" cx="60" cy="60" r="48"></circle>
+                <circle class="ring fat" cx="60" cy="60" r="48"></circle>
+                <text x="60" y="56" text-anchor="middle">Plan</text>
+                <text x="60" y="76" text-anchor="middle">kcal</text>
+              </svg>
+              <div class="macro-legend">
+                <span><i class="dot purple-dot"></i>Protein</span>
+                <span><i class="dot orange-dot"></i>Carbs</span>
+                <span><i class="dot teal-dot"></i>Fat</span>
+              </div>
+            </div>
             <form id="diet-form" class="stack">
               <input type="hidden" id="goal" value="lose" />
               <div class="segmented-control" data-segmented="goal" role="tablist" aria-label="Diet goal">
@@ -153,7 +180,8 @@
             <div id="diet-result" class="result-box">A meal plan will appear here.</div>
           </div>
 
-          <div class="card glass" id="login">
+          <div class="card glass tool-card" id="login">
+            <span class="badge-icon teal">U</span>
             <h3 id="auth-title">Login / Register</h3>
             <div class="auth-tabs">
               <button class="auth-tab active" type="button" data-mode="login">Login</button>
@@ -169,7 +197,8 @@
             <p id="auth-message" class="result-box">Create an account or sign in to access member features.</p>
           </div>
 
-          <div class="card glass">
+          <div class="card glass tool-card">
+            <span class="badge-icon purple">✓</span>
             <h3>Workout tracker</h3>
             <p class="card-note">Track today's training and keep your dashboard current.</p>
             <div class="tracker-list">
@@ -181,8 +210,17 @@
             <div class="result-box"><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
           </div>
 
-          <div class="card glass session-card">
+          <div class="card glass session-card tool-card">
+            <span class="badge-icon orange">⏱</span>
             <h3>Gym session tracker</h3>
+            <div class="week-strip" aria-label="Training week">
+              <span>M</span><span>T</span><span>W</span><span class="active-day">T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+            <div class="stat-row-list">
+              <div class="stat-row"><span class="badge-icon purple">↟</span><div><b>Steps</b><small>Today in gym</small></div><strong id="session-row-steps">0</strong></div>
+              <div class="stat-row"><span class="badge-icon teal">K</span><div><b>Burn</b><small>Workout calories</small></div><strong id="session-row-calories">0</strong></div>
+              <div class="stat-row"><span class="badge-icon orange">⌚</span><div><b>Time</b><small>Gym session</small></div><strong id="session-row-time">0m</strong></div>
+            </div>
             <p class="card-note">Track steps, workout calories, and total gym time.</p>
             <form id="session-form" class="stack">
               <input id="session-steps" type="number" min="0" step="100" placeholder="Steps walked in gym" required />
@@ -214,7 +252,8 @@
             <div id="session-result" class="result-box">Enter your workout details to see the result.</div>
           </div>
 
-          <div class="card glass">
+          <div class="card glass tool-card">
+            <span class="badge-icon teal">☎</span>
             <h3>Book a visit</h3>
             <form id="booking-form" class="stack">
               <input id="booking-name" type="text" placeholder="Your name" required />
@@ -278,10 +317,10 @@
         <div class="card glass admin-dashboard">
           <h3 id="dashboard-title" class="split-headline">Member dashboard overview</h3>
           <div class="metrics">
-            <div class="metric"><strong id="member-count">240+</strong><span>Members</span></div>
-            <div class="metric"><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
-            <div class="metric"><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div>
-            <div class="metric"><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
+            <div class="metric"><span class="badge-icon purple">M</span><strong id="member-count">240+</strong><span>Members</span></div>
+            <div class="metric"><span class="badge-icon orange">↟</span><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
+            <div class="metric"><span class="badge-icon teal">K</span><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div>
+            <div class="metric"><span class="badge-icon purple">⌚</span><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
           </div>
           <ul class="activity-list">
             <li>Track your daily steps, workout time, and calories after every gym session.</li>
@@ -311,11 +350,12 @@
       </section>
     </main>
 
-    <nav class="mobile-tabbar" aria-label="Mobile app navigation">
-      <a href="#home">Home</a>
-      <a href="#tools">Tools</a>
-      <a href="#dashboard">Stats</a>
-      <a href="#contact">Contact</a>
+    <nav class="mobile-tabbar bottom-nav" aria-label="Mobile app navigation">
+      <a href="#home" class="active" aria-label="Home">⌂<span>Home</span></a>
+      <a href="#tools" aria-label="Tools">◌<span>Tools</span></a>
+      <a class="fab" href="#booking-form" aria-label="Book visit">+</a>
+      <a href="#dashboard" aria-label="Stats">▣<span>Stats</span></a>
+      <a href="#contact" aria-label="Contact">✉<span>Inbox</span></a>
     </nav>
 
     <footer>
