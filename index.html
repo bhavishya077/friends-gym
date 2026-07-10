@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=12" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -62,7 +62,7 @@
         <div class="container hero-inner">
         <div class="hero-copy">
           <div class="app-topline">
-            <button class="icon-button" type="button" aria-label="Open menu">☰</button>
+            <button class="icon-button" type="button" aria-label="Open menu">Menu</button>
             <span>Friends Gym</span>
             <span class="avatar" aria-label="User avatar">FG</span>
           </div>
@@ -78,7 +78,7 @@
             <span class="pill">Medium difficulty</span>
             <h2>Full body strength flow</h2>
             <p>45 min workout with warm-up, strength circuit, and recovery.</p>
-            <a href="#tools" class="play-button" aria-label="Start workout">▶</a>
+            <a href="#tools" class="play-button" aria-label="Start workout">Start</a>
           </div>
           <div class="stats">
             <div class="stat"><strong data-count="24">24</strong><span>Access</span></div>
@@ -120,10 +120,10 @@
         <div class="marquee-track">
           <span>Power. Discipline. Progress.</span>
           <span>Friends Gym class flow</span>
-          <span>Strength • Cardio • Recovery • Focus</span>
+          <span>Strength / Cardio / Recovery / Focus</span>
           <span>Power. Discipline. Progress.</span>
           <span>Friends Gym class flow</span>
-          <span>Strength • Cardio • Recovery • Focus</span>
+          <span>Strength / Cardio / Recovery / Focus</span>
         </div>
       </div>
 
@@ -133,7 +133,7 @@
         <p class="section-subtitle">These practical tools keep your website useful while making it feel more advanced and valuable.</p>
         <div class="grid grid-3">
           <div class="card glass tool-card">
-            <span class="badge-icon purple">⌁</span>
+            <span class="badge-icon purple">B</span>
             <h3>BMI calculator</h3>
             <form id="bmi-form" class="stack">
               <input id="height" type="number" placeholder="Height in cm" required />
@@ -150,7 +150,7 @@
           </div>
 
           <div class="card glass tool-card nutrition-card">
-            <span class="badge-icon orange">●</span>
+            <span class="badge-icon orange">N</span>
             <h3>Nutrition planner</h3>
             <div class="nutrition-overview">
               <svg class="progress-ring" viewBox="0 0 120 120" aria-label="Nutrition progress">
@@ -198,7 +198,7 @@
           </div>
 
           <div class="card glass tool-card">
-            <span class="badge-icon purple">✓</span>
+            <span class="badge-icon purple">W</span>
             <h3>Workout tracker</h3>
             <p class="card-note">Track today's training and keep your dashboard current.</p>
             <div class="tracker-list">
@@ -211,15 +211,15 @@
           </div>
 
           <div class="card glass session-card tool-card">
-            <span class="badge-icon orange">⏱</span>
+            <span class="badge-icon orange">T</span>
             <h3>Gym session tracker</h3>
             <div class="week-strip" aria-label="Training week">
               <span>M</span><span>T</span><span>W</span><span class="active-day">T</span><span>F</span><span>S</span><span>S</span>
             </div>
             <div class="stat-row-list">
-              <div class="stat-row"><span class="badge-icon purple">↟</span><div><b>Steps</b><small>Today in gym</small></div><strong id="session-row-steps">0</strong></div>
+              <div class="stat-row"><span class="badge-icon purple">S</span><div><b>Steps</b><small>Today in gym</small></div><strong id="session-row-steps">0</strong></div>
               <div class="stat-row"><span class="badge-icon teal">K</span><div><b>Burn</b><small>Workout calories</small></div><strong id="session-row-calories">0</strong></div>
-              <div class="stat-row"><span class="badge-icon orange">⌚</span><div><b>Time</b><small>Gym session</small></div><strong id="session-row-time">0m</strong></div>
+              <div class="stat-row"><span class="badge-icon orange">T</span><div><b>Time</b><small>Gym session</small></div><strong id="session-row-time">0m</strong></div>
             </div>
             <p class="card-note">Track steps, workout calories, and total gym time.</p>
             <form id="session-form" class="stack">
@@ -253,7 +253,7 @@
           </div>
 
           <div class="card glass tool-card">
-            <span class="badge-icon teal">☎</span>
+            <span class="badge-icon teal">P</span>
             <h3>Book a visit</h3>
             <form id="booking-form" class="stack">
               <input id="booking-name" type="text" placeholder="Your name" required />
@@ -318,9 +318,9 @@
           <h3 id="dashboard-title" class="split-headline">Member dashboard overview</h3>
           <div class="metrics">
             <div class="metric"><span class="badge-icon purple">M</span><strong id="member-count">240+</strong><span>Members</span></div>
-            <div class="metric"><span class="badge-icon orange">↟</span><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
+            <div class="metric"><span class="badge-icon orange">S</span><strong id="dashboard-steps">0</strong><span>Steps Today</span></div>
             <div class="metric"><span class="badge-icon teal">K</span><strong id="dashboard-calories">0 kcal</strong><span>Burned</span></div>
-            <div class="metric"><span class="badge-icon purple">⌚</span><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
+            <div class="metric"><span class="badge-icon purple">T</span><strong id="dashboard-time">0 min</strong><span>Gym Time</span></div>
           </div>
           <ul class="activity-list">
             <li>Track your daily steps, workout time, and calories after every gym session.</li>
@@ -351,11 +351,11 @@
     </main>
 
     <nav class="mobile-tabbar bottom-nav" aria-label="Mobile app navigation">
-      <a href="#home" class="active" aria-label="Home">⌂<span>Home</span></a>
-      <a href="#tools" aria-label="Tools">◌<span>Tools</span></a>
+      <a href="#home" class="active" aria-label="Home">H<span>Home</span></a>
+      <a href="#tools" aria-label="Tools">T<span>Tools</span></a>
       <a class="fab" href="#booking-form" aria-label="Book visit">+</a>
-      <a href="#dashboard" aria-label="Stats">▣<span>Stats</span></a>
-      <a href="#contact" aria-label="Contact">✉<span>Inbox</span></a>
+      <a href="#dashboard" aria-label="Stats">S<span>Stats</span></a>
+      <a href="#contact" aria-label="Contact">I<span>Inbox</span></a>
     </nav>
 
     <footer>
@@ -366,6 +366,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=12"></script>
   </body>
 </html>
+

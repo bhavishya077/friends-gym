@@ -1,4 +1,4 @@
-const CACHE_NAME = 'friends-gym-v11';
+const CACHE_NAME = 'friends-gym-v12';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -56,3 +56,4 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
