@@ -9,25 +9,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
 
-  const screenHistory = ['home-screen'];
+  const routeToScreen = {
+    '/': 'home',
+    '/workout': 'workout',
+    '/nutrition': 'nutrition',
+    '/classes': 'classes',
+    '/membership': 'membership',
+    '/tools': 'tools',
+    '/auth': 'auth',
+    '/contact': 'contact'
+  };
+  const screenToRoute = Object.fromEntries(Object.entries(routeToScreen).map(([route, screen]) => [screen, route]));
   const navMap = {
-    'home-screen': 'nav-home',
-    'workout-screen': 'nav-workout',
-    'nutrition-screen': 'nav-nutrition',
-    'tools-screen': null,
-    'plans-screen': null,
-    'profile-screen': 'nav-profile',
-    'contact-screen': null
+    home: 'nav-home',
+    classes: 'nav-classes',
+    membership: 'nav-membership',
+    auth: 'nav-auth'
+  };
+  const screenHistory = ['home'];
+
+  const updateUrlChrome = (screenId) => {
+    const urlPath = document.getElementById('urlpath');
+    const route = screenToRoute[screenId] || '/';
+    if (urlPath) urlPath.textContent = `friendsgym.app${route === '/' ? '/' : route}`;
   };
 
-  const showScreen = (screenId, pushHistory = true) => {
+  const showScreen = (screenId, options = {}) => {
+    const { push = true, remember = true } = options;
     const target = document.getElementById(screenId);
     if (!target || !target.classList.contains('screen')) return;
     const current = document.querySelector('.screen.active');
-    if (current && current.id === screenId) return;
+    if (current && current.id === screenId) {
+      updateUrlChrome(screenId);
+      return;
+    }
     document.querySelectorAll('.screen').forEach((screen) => screen.classList.remove('active'));
     target.classList.add('active');
-    if (pushHistory && (!screenHistory.length || screenHistory[screenHistory.length - 1] !== screenId)) {
+    if (remember && (!screenHistory.length || screenHistory[screenHistory.length - 1] !== screenId)) {
       screenHistory.push(screenId);
     }
     document.querySelectorAll('.nav-icon').forEach((item) => item.classList.remove('active'));
@@ -36,10 +54,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const navItem = document.getElementById(navId);
       if (navItem) navItem.classList.add('active');
     }
+    updateUrlChrome(screenId);
+    const route = screenToRoute[screenId] || '/';
+    if (push && window.location.pathname !== route) {
+      window.history.pushState({ screenId }, '', route);
+    }
     target.scrollTop = 0;
   };
 
-  window.showScreen = showScreen;
+  window.showScreen = (id) => showScreen(id);
 
   document.querySelectorAll('[data-screen]').forEach((item) => {
     item.addEventListener('click', (event) => {
@@ -57,11 +80,38 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-back]').forEach((button) => {
     button.addEventListener('click', () => {
       screenHistory.pop();
-      const previous = screenHistory[screenHistory.length - 1] || 'home-screen';
-      showScreen(previous, false);
+      const previous = screenHistory[screenHistory.length - 1] || 'home';
+      showScreen(previous, { push: true, remember: false });
     });
   });
 
+  window.addEventListener('popstate', () => {
+    const screenId = routeToScreen[window.location.pathname] || 'home';
+    showScreen(screenId, { push: false, remember: false });
+  });
+
+  showScreen(routeToScreen[window.location.pathname] || 'home', { push: false, remember: false });
+
+  const googleAuthButton = document.getElementById('google-auth');
+  const authToast = document.getElementById('authToast');
+  const showAuthToast = (message = 'Signed in - redirecting to Home...') => {
+    if (!authToast) return;
+    authToast.textContent = message;
+    authToast.classList.add('show');
+    setTimeout(() => authToast.classList.remove('show'), 1800);
+  };
+
+  if (googleAuthButton) {
+    googleAuthButton.addEventListener('click', async () => {
+      const config = window.FRIENDS_GYM_SUPABASE || {};
+      if (window.supabase && config.url && config.anonKey) {
+        const client = window.supabase.createClient(config.url, config.anonKey);
+        await client.auth.signInWithOAuth({ provider: 'google' });
+        return;
+      }
+      showAuthToast('Add Supabase URL and anon key to enable Google sign-in.');
+    });
+  }
   if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
     navigator.serviceWorker.register('/service-worker.js').catch(() => {});
   }
@@ -571,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await response.json();
         authMessage.textContent = result.message || 'Request completed.';
-        if (response.ok && result.user) setLoggedInUser(result.user);
+        if (response.ok && result.user) { setLoggedInUser(result.user); showAuthToast('Signed in - redirecting to Home...'); setTimeout(() => showScreen('home'), 900); }
       } catch (error) {
         authMessage.textContent = 'Unable to reach the server. Please try again.';
       }

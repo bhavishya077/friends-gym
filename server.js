@@ -218,6 +218,12 @@ function serveStatic(req, res) {
 
   fs.stat(fullPath, (err, stats) => {
     if (err || !stats.isFile()) {
+      const appRoutes = new Set(['/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/contact']);
+      if (req.method === 'GET' && appRoutes.has(requestedPath)) {
+        res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'index.html')) });
+        fs.createReadStream(path.join(ROOT, 'index.html')).pipe(res);
+        return;
+      }
       sendJson(res, 404, { message: 'File not found' });
       return;
     }
