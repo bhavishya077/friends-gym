@@ -3711,3 +3711,16 @@ body.dark-app-body {
   .activity-stats { gap: 7px; }
   #workout .activity-stats .stat-row { padding-inline: 5px !important; }
 }
+/* v23: keep the center workout action perfectly circular on every mobile browser */
+.bottom-nav .fab {
+  flex: 0 0 56px !important;
+  width: 56px !important;
+  height: 56px !important;
+  min-width: 56px !important;
+  min-height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+  aspect-ratio: 1 / 1;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
