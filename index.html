@@ -13,9 +13,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=23" />
+    <link rel="stylesheet" href="style.css?v=30" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-config.js?v=23"></script>
+    <script src="supabase-config.js?v=30"></script>
   </head>
   <body class="dark-app-body">
 
@@ -57,14 +57,27 @@
             <div class="stat-row"><div class="stat-icon amber">T</div><div class="info"><h5>Workout</h5><p>Live session timer</p></div><div class="value"><b id="session-row-time">0m</b><span>Minutes</span></div></div>
             <div class="stat-row"><div class="stat-icon muted-icon">K</div><div class="info"><h5>Calories</h5><p>Calculated from intensity</p></div><div class="value"><b id="session-row-calories">0</b><span>Kcal</span></div></div>
           </div>
+          <div class="card trainer-card">
+            <div class="trainer-kicker"><span>AI-STYLE COACH</span><b id="trainer-level">BEGINNER</b></div>
+            <div class="section-head"><div><h4>Exercise Trainer</h4><p>Follow each step with controlled form</p></div><span id="trainer-progress">0/5 done</span></div>
+            <div class="trainer-picker" id="trainer-picker" role="list" aria-label="Choose exercise"></div>
+            <article class="trainer-stage"><div class="trainer-media"><video id="trainer-video" muted loop playsinline preload="metadata" hidden></video><div class="trainer-visual" id="trainer-visual" aria-hidden="true">SQ</div><span id="trainer-media-label">Guided demo</span></div><div class="trainer-info"><span id="trainer-muscle">FULL BODY</span><h3 id="trainer-name">Bodyweight Squat</h3><p id="trainer-coaching">Keep your chest tall and push your knees in line with your toes.</p></div></article>
+            <div class="trainer-prescription"><div><span>SETS</span><strong id="trainer-sets">3</strong></div><div><span>REPS</span><strong id="trainer-reps">12</strong></div><div><span>REST</span><strong id="trainer-rest">45s</strong></div></div>
+            <ol id="trainer-steps" class="trainer-steps"></ol>
+            <div class="trainer-safety"><b>Form first:</b> Stop if you feel sharp pain, dizziness or unusual discomfort.</div>
+            <div class="trainer-actions"><button id="trainer-complete" class="btn btn-primary" type="button">Mark exercise complete</button><button id="trainer-rest-start" class="btn btn-secondary" type="button">Start rest <span id="trainer-rest-clock">00:45</span></button></div>
+          </div>
           <div class="card session-card">
             <div class="section-head"><h4>Workout Checklist</h4></div>
             <div class="tracker-list"><label class="tracker-item"><input type="checkbox" data-workout value="Warm-up" /> Warm-up and mobility</label><label class="tracker-item"><input type="checkbox" data-workout value="Strength" /> Strength circuit</label><label class="tracker-item"><input type="checkbox" data-workout value="Cardio" /> Cardio finisher</label><label class="tracker-item"><input type="checkbox" data-workout value="Stretch" /> Cooldown stretch</label></div>
           </div>
           <div class="card session-card">
             <div class="section-head"><h4>Live Session</h4><span id="live-session-time">00:00</span></div>
-            <form id="session-form" class="stack form-plain">
-              <input id="session-steps" type="number" min="0" step="100" placeholder="Steps walked in gym" required />
+            <div class="auto-tracker-panel">
+              <div><span class="live-dot"></span><b>Automatic Live Tracking</b><small id="auto-tracker-status">Ready - keep app open during workout</small></div>
+              <button id="auto-tracker-start" class="btn btn-primary" type="button">Enable & Start</button>
+            </div>            <form id="session-form" class="stack form-plain">
+              <input id="session-weight" type="number" min="30" max="250" step="1" value="70" placeholder="Your weight in kg (for calorie estimate)" required />              <input id="session-steps" type="number" min="0" step="100" placeholder="Steps walked in gym" required />
               <input id="session-minutes" type="number" min="1" step="1" placeholder="Workout time in minutes" required />
               <select id="session-workout"><option value="strength">Strength training</option><option value="cardio">Cardio</option><option value="hiit">HIIT</option><option value="mobility">Mobility</option></select>
               <input type="hidden" id="session-intensity" value="moderate" />
@@ -108,7 +121,7 @@
 
         <section class="screen" id="auth" data-route="/auth" data-title="Auth">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>SIGN IN</h1><div style="width:38px"></div></div>
-          <div class="auth-wrap"><div class="auth-logo"></div><h2>Welcome Back</h2><p>Sign in to save your progress and manage your membership</p><button class="google-btn" id="google-auth" type="button">G Continue with Google</button><div class="divider">or</div><form id="auth-form" class="auth-form"><input id="auth-name" class="auth-input" type="text" placeholder="Name" /><input id="auth-email" class="auth-input" type="email" placeholder="Email address" required /><input id="auth-password" class="auth-input" type="password" placeholder="Password" required /><button class="btn-primary" type="submit">Sign In</button></form><div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Sign In</button><button class="auth-tab" type="button" data-mode="register">Sign Up</button></div><button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button><div class="auth-toast" id="authToast">Signed in - redirecting to Home...</div><p id="auth-message" class="result-box">Use email/password or connect Supabase for Google sign-in.</p></div>
+          <div class="auth-wrap"><div class="auth-logo"></div><h2>Welcome Back</h2><p>Sign in to save your progress and manage your membership</p><button class="google-btn" id="google-auth" type="button">G Continue with Google</button><div class="divider">or</div><form id="auth-form" class="auth-form"><input id="auth-name" class="auth-input" type="text" placeholder="Name" /><input id="auth-email" class="auth-input" type="email" placeholder="Email address" required /><input id="auth-password" class="auth-input" type="password" placeholder="Password" required /><button class="btn-primary" type="submit">Sign In</button></form><div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Sign In</button><button class="auth-tab" type="button" data-mode="register">Sign Up</button></div><a class="btn btn-secondary" href="/admin" id="admin-dashboard-link">Gym Admin Dashboard</a><button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button><div class="auth-toast" id="authToast">Signed in - redirecting to Home...</div><p id="auth-message" class="result-box">Use email/password or connect Supabase for Google sign-in.</p></div>
         </section>
 
         <section class="screen" id="contact" data-route="/contact" data-title="Contact">
@@ -135,6 +148,6 @@
       </nav>
     </div>
     <p class="caption">Friends Gym dark app. Move page to page like a mobile app.</p>
-    <script src="script.js?v=23"></script>
+    <script src="script.js?v=30"></script>
   </body>
 </html>

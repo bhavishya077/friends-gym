@@ -234,6 +234,11 @@ function serveStatic(req, res) {
 
   fs.stat(fullPath, (err, stats) => {
     if (err || !stats.isFile()) {
+      if (req.method === 'GET' && requestedPath === '/admin') {
+        res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'admin.html')) });
+        fs.createReadStream(path.join(ROOT, 'admin.html')).pipe(res);
+        return;
+      }
       const appRoutes = new Set(['/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/contact']);
       if (req.method === 'GET' && appRoutes.has(requestedPath)) {
         res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'index.html')) });

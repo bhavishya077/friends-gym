@@ -952,4 +952,117 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const yearElement = document.getElementById('year');
   if (yearElement) yearElement.textContent = new Date().getFullYear();
-});
+
+  const trainerExercises = [
+    { id:'squat', short:'Squat', icon:'SQ', video:'assets/trainer-squat.mp4', name:'Bodyweight Squat', muscle:'LEGS / GLUTES', sets:3, reps:'12', rest:45, coaching:'Keep your chest tall and push your knees in line with your toes.', steps:['Stand with feet slightly wider than hips.','Brace your core and sit your hips back.','Lower until thighs are comfortable near parallel.','Drive through your whole foot to stand tall.'] },
+    { id:'pushup', short:'Push-up', icon:'PU', video:'assets/trainer-pushup.mp4', name:'Push-up', muscle:'CHEST / ARMS', sets:3, reps:'10', rest:45, coaching:'Keep one straight line from head to heel and move with control.', steps:['Place hands slightly wider than shoulders.','Brace your core and keep your body straight.','Lower your chest toward the floor.','Press the floor away without shrugging.'] },
+    { id:'bench', short:'Bench', icon:'BP', video:'assets/bench-press.mp4', name:'Bench Press', muscle:'CHEST / TRICEPS', sets:3, reps:'10', rest:60, coaching:'Keep shoulder blades gently pulled back and feet planted.', steps:['Lie with eyes just below the bar.','Grip slightly wider than shoulder width.','Lower the bar under control toward mid-chest.','Press upward while keeping shoulders stable.'] },
+    { id:'lunge', short:'Lunge', icon:'LG', video:'assets/trainer-lunge.mp4', name:'Reverse Lunge', muscle:'LEGS / BALANCE', sets:3, reps:'8 / side', rest:45, coaching:'Step far enough back so the front heel stays grounded.', steps:['Stand tall with feet hip-width apart.','Step one foot back and lower gently.','Keep the front knee tracking over the toes.','Push through the front foot to return.'] },
+    { id:'ropes', short:'Ropes', icon:'BR', video:'assets/battle-ropes.mp4', name:'Battle Ropes', muscle:'FULL BODY / CARDIO', sets:4, reps:'30 sec', rest:30, coaching:'Stay athletic with a braced core and make smooth alternating waves.', steps:['Stand with feet shoulder-width and knees soft.','Hold one rope end in each hand.','Alternate arms while keeping your chest tall.','Maintain steady waves for the full interval.'] }
+  ];
+  const trainerPicker = document.getElementById('trainer-picker');
+  if (trainerPicker) {
+    let trainerActive = 0;
+    let trainerTimer = null;
+    let trainerSeconds = trainerExercises[0].rest;
+    const trainerDone = new Set(JSON.parse(localStorage.getItem('friends-gym-trainer-done') || '[]'));
+    const trainerClock = document.getElementById('trainer-rest-clock');
+    const trainerComplete = document.getElementById('trainer-complete');
+    const trainerRestButton = document.getElementById('trainer-rest-start');
+    const renderTrainerClock = () => { trainerClock.textContent = `00:${String(trainerSeconds).padStart(2,'0')}`; };
+    const renderTrainer = () => {
+      const item = trainerExercises[trainerActive];
+      trainerPicker.innerHTML = trainerExercises.map((exercise,index) => `<button class="trainer-chip ${index===trainerActive?'active':''} ${trainerDone.has(exercise.id)?'done':''}" type="button" data-trainer-index="${index}">${exercise.short}</button>`).join('');
+      const trainerVisual=document.getElementById('trainer-visual'); const trainerVideo=document.getElementById('trainer-video'); const mediaLabel=document.getElementById('trainer-media-label'); trainerVisual.textContent=item.icon; if(item.video){trainerVideo.src=item.video;trainerVideo.hidden=false;trainerVisual.hidden=true;mediaLabel.textContent='Tap video to pause';trainerVideo.play().catch(()=>{});}else{trainerVideo.pause();trainerVideo.removeAttribute('src');trainerVideo.load();trainerVideo.hidden=true;trainerVisual.hidden=false;mediaLabel.textContent='Demo coming soon';} document.getElementById('trainer-muscle').textContent=item.muscle; document.getElementById('trainer-name').textContent=item.name; document.getElementById('trainer-coaching').textContent=item.coaching; document.getElementById('trainer-sets').textContent=item.sets; document.getElementById('trainer-reps').textContent=item.reps; document.getElementById('trainer-rest').textContent=`${item.rest}s`; document.getElementById('trainer-steps').innerHTML=item.steps.map(step=>`<li>${step}</li>`).join(''); document.getElementById('trainer-progress').textContent=`${trainerDone.size}/${trainerExercises.length} done`;
+      trainerComplete.textContent=trainerDone.has(item.id)?'Completed - DONE':'Mark exercise complete'; trainerComplete.classList.toggle('completed',trainerDone.has(item.id)); clearInterval(trainerTimer); trainerTimer=null; trainerSeconds=item.rest; trainerRestButton.firstChild.textContent='Start rest '; renderTrainerClock();
+    };
+    document.getElementById('trainer-video')?.addEventListener('click',event=>{if(event.currentTarget.paused)event.currentTarget.play().catch(()=>{});else event.currentTarget.pause();});
+    trainerPicker.addEventListener('click',event=>{const button=event.target.closest('[data-trainer-index]');if(!button)return;trainerActive=Number(button.dataset.trainerIndex);renderTrainer();});
+    trainerComplete.addEventListener('click',()=>{const id=trainerExercises[trainerActive].id;if(trainerDone.has(id))trainerDone.delete(id);else trainerDone.add(id);localStorage.setItem('friends-gym-trainer-done',JSON.stringify([...trainerDone]));renderTrainer();});
+    trainerRestButton.addEventListener('click',()=>{if(trainerTimer){clearInterval(trainerTimer);trainerTimer=null;trainerRestButton.firstChild.textContent='Resume rest ';return;}if(trainerSeconds<=0)trainerSeconds=trainerExercises[trainerActive].rest;trainerRestButton.firstChild.textContent='Pause rest ';trainerTimer=setInterval(()=>{trainerSeconds-=1;renderTrainerClock();if(trainerSeconds<=0){clearInterval(trainerTimer);trainerTimer=null;trainerRestButton.firstChild.textContent='Rest complete ';if(navigator.vibrate)navigator.vibrate([120,80,120]);}},1000);});
+    renderTrainer();
+  }
+  const autoTrackerStart = document.getElementById('auto-tracker-start');
+  const autoTrackerStatus = document.getElementById('auto-tracker-status');
+  const sessionWeight = document.getElementById('session-weight');
+  const autoTrackerPanel = document.querySelector('.auto-tracker-panel');
+  let autoTracking = false;
+  let autoMotionHandler = null;
+  let autoLiveInterval = null;
+  let autoLastMagnitude = null;
+  let autoLastStepAt = 0;
+  let autoStepTimes = [];
+  let autoMotionSamples = [];
+
+  const autoIntensityFromMotion = () => {
+    const now = Date.now();
+    autoStepTimes = autoStepTimes.filter(time => now - time < 30000);
+    const cadence = autoStepTimes.length * 2;
+    const motion = autoMotionSamples.length ? autoMotionSamples.reduce((sum,value)=>sum+value,0) / autoMotionSamples.length : 0;
+    if (cadence >= 115 || motion > 2.6) return 'hard';
+    if (cadence >= 65 || motion > 1.25) return 'moderate';
+    return 'light';
+  };
+  const setAutoIntensity = (intensity) => {
+    if (sessionIntensity) sessionIntensity.value = intensity;
+    document.querySelectorAll('[data-segmented="session-intensity"] .segment').forEach(button => {
+      const active = button.dataset.value === intensity;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  };
+  const updateAutoLiveStats = () => {
+    if (!autoTracking || !sessionStartedAt) return;
+    const seconds = Math.max(1,Math.floor((Date.now()-sessionStartedAt)/1000));
+    const minutesExact = seconds / 60;
+    const steps = Math.max(0,Number(sessionSteps?.value||0));
+    const weight = Math.max(30,Number(sessionWeight?.value||70));
+    const intensity = autoIntensityFromMotion();
+    setAutoIntensity(intensity);
+    const metBase = {strength:5.0,cardio:7.0,hiit:9.0,mobility:3.0}[sessionWorkout?.value||'strength'];
+    const multiplier = {light:.72,moderate:1,hard:1.28}[intensity];
+    const calories = Math.max(0,Math.round(metBase*multiplier*3.5*weight/200*minutesExact));
+    const distanceKm = steps*.000762;
+    if(sessionRowSteps) sessionRowSteps.textContent=steps.toLocaleString();
+    if(sessionRowTime) sessionRowTime.textContent=`${Math.floor(minutesExact)}m`;
+    if(sessionRowCalories) sessionRowCalories.textContent=String(calories);
+    if(sessionCalories) sessionCalories.textContent=String(calories);
+    if(sessionDistance) sessionDistance.textContent=`${distanceKm.toFixed(2)} km`;
+    if(dashboardSteps) dashboardSteps.textContent=steps.toLocaleString();
+    if(dashboardCalories) dashboardCalories.textContent=`${calories} kcal`;
+    if(dashboardTime) dashboardTime.textContent=`${Math.floor(minutesExact)} min`;
+    if(autoTrackerStatus) autoTrackerStatus.textContent=`Tracking - ${intensity} - ${autoStepTimes.length*2} steps/min - calorie estimate`;
+  };
+  const stopAutoTracking = (message='Paused - tap Enable & Start to continue') => {
+    autoTracking=false;
+    if(autoMotionHandler) window.removeEventListener('devicemotion',autoMotionHandler);
+    autoMotionHandler=null; clearInterval(autoLiveInterval); autoLiveInterval=null;
+    autoTrackerPanel?.classList.remove('tracking');
+    if(autoTrackerStart) autoTrackerStart.textContent='Enable & Start';
+    if(autoTrackerStatus) autoTrackerStatus.textContent=message;
+  };
+  const beginAutoTracking = async () => {
+    if(!('DeviceMotionEvent' in window)){ if(autoTrackerStatus)autoTrackerStatus.textContent='Motion sensor unavailable - use manual fields'; return; }
+    try {
+      if(typeof DeviceMotionEvent.requestPermission==='function'){
+        const permission=await DeviceMotionEvent.requestPermission();
+        if(permission!=='granted'){if(autoTrackerStatus)autoTrackerStatus.textContent='Motion permission denied';return;}
+      }
+      if(!sessionStartedAt) startSession?.click();
+      autoTracking=true; autoStepTimes=[]; autoMotionSamples=[]; autoLastMagnitude=null;
+      autoMotionHandler=(event)=>{
+        const a=event.accelerationIncludingGravity||event.acceleration; if(!a||a.x==null||a.y==null||a.z==null)return;
+        const magnitude=Math.sqrt(a.x*a.x+a.y*a.y+a.z*a.z); if(autoLastMagnitude==null){autoLastMagnitude=magnitude;return;}
+        const delta=Math.abs(magnitude-autoLastMagnitude); autoLastMagnitude=magnitude; autoMotionSamples.push(delta); if(autoMotionSamples.length>40)autoMotionSamples.shift();
+        const now=Date.now(); if(delta>1.65&&now-autoLastStepAt>280){autoLastStepAt=now;autoStepTimes.push(now);if(sessionSteps)sessionSteps.value=String(Number(sessionSteps.value||0)+1);}
+      };
+      window.addEventListener('devicemotion',autoMotionHandler,{passive:true});
+      autoLiveInterval=setInterval(updateAutoLiveStats,1000); updateAutoLiveStats();
+      autoTrackerPanel?.classList.add('tracking'); autoTrackerStart.textContent='Pause tracking';
+    } catch { if(autoTrackerStatus)autoTrackerStatus.textContent='Sensor could not start - use manual mode'; }
+  };
+  autoTrackerStart?.addEventListener('click',()=>{if(autoTracking)stopAutoTracking();else beginAutoTracking();});
+  stopSession?.addEventListener('click',()=>stopAutoTracking('Workout stopped - values ready to save'));
+  resetSession?.addEventListener('click',()=>{stopAutoTracking('Ready - keep app open during workout');if(sessionWeight)sessionWeight.value=localStorage.getItem('friends-gym-weight')||'70';});
+  sessionWeight?.addEventListener('change',()=>localStorage.setItem('friends-gym-weight',sessionWeight.value));
+  if(sessionWeight)sessionWeight.value=localStorage.getItem('friends-gym-weight')||sessionWeight.value||'70';});
