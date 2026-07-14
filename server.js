@@ -2,6 +2,21 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+function loadLocalEnv() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const separator = trimmed.indexOf('=');
+    if (separator < 1) continue;
+    const key = trimmed.slice(0, separator).trim();
+    const value = trimmed.slice(separator + 1).trim();
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+loadLocalEnv();
 let nodemailer = null;
 
 try {
@@ -200,6 +215,7 @@ function getContentType(filePath) {
     case '.jpeg': return 'image/jpeg';
     case '.png': return 'image/png';
     case '.svg': return 'image/svg+xml';
+    case '.mp4': return 'video/mp4';
     default: return 'application/octet-stream';
   }
 }
@@ -246,6 +262,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'GET' && reqUrl.pathname === '/api/config') {
+    sendJson(res, 200, {
+      supabaseUrl: process.env.SUPABASE_URL || '',
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+    });
+    return;
+  }
+
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
     sendJson(res, 200, { status: 'ok', service: 'friends-gym' });
     return;
@@ -255,16 +279,28 @@ const server = http.createServer((req, res) => {
     readBody(req, async (error, data) => {
       try {
         if (error) throw error;
-        const { name, email, password } = data;
+        const name = String(data.name || '').trim();
+        const email = String(data.email || '').trim().toLowerCase();
+        const password = String(data.password || '');
         if (!name || !email || !password) {
           sendJson(res, 400, { message: 'Please fill in all fields.' });
           return;
         }
 
         const users = readUsers();
-        const exists = users.some(user => user.email.toLowerCase() === email.toLowerCase());
+        const exists = users.some(user => String(user.email || '').toLowerCase() === email);
         if (exists) {
           sendJson(res, 409, { message: 'An account with this email already exists.' });
+          return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          sendJson(res, 400, { message: 'Please enter a valid email address.' });
+          return;
+        }
+
+        if (password.length < 8 || password.length > 128) {
+          sendJson(res, 400, { message: 'Password must be between 8 and 128 characters.' });
           return;
         }
 
@@ -283,14 +319,15 @@ const server = http.createServer((req, res) => {
     readBody(req, async (error, data) => {
       try {
         if (error) throw error;
-        const { email, password } = data;
+        const email = String(data.email || '').trim().toLowerCase();
+        const password = String(data.password || '');
         if (!email || !password) {
           sendJson(res, 400, { message: 'Please enter your email and password.' });
           return;
         }
 
         const users = readUsers();
-        const user = users.find(item => item.email.toLowerCase() === email.toLowerCase());
+        const user = users.find(item => String(item.email || '').toLowerCase() === email);
         if (!user || !verifyPassword(password, user.password)) {
           logActivity(`FAILED_LOGIN ${email}`);
           sendJson(res, 401, { message: 'Invalid email or password.' });

@@ -2,12 +2,12 @@
   "name": "Friends Gym",
   "short_name": "Friends Gym",
   "description": "Mobile fitness app for BMI tools, meal plans, workouts, bookings, and member access.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#06070b",
-  "theme_color": "#ff5f1f",
+  "background_color": "#0F0F10",
+  "theme_color": "#0F0F10",
   "categories": ["fitness", "health", "lifestyle"],
   "icons": [
     {
@@ -21,12 +21,12 @@
     {
       "name": "Fitness tools",
       "short_name": "Tools",
-      "url": "/index.html#tools"
+      "url": "/tools"
     },
     {
       "name": "Book a visit",
       "short_name": "Book",
-      "url": "/index.html#contact"
+      "url": "/contact"
     }
   ]
 }

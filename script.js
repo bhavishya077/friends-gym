@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const nav = document.querySelector('.nav-links');
   const themeToggle = document.getElementById('theme-toggle');
   const installButton = document.getElementById('install-app');
+  const appMenuButton = document.getElementById('app-menu-button');
+  const appDrawer = document.getElementById('app-drawer');
+  const appDrawerBackdrop = document.getElementById('app-drawer-backdrop');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
@@ -28,6 +31,21 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const screenHistory = ['home'];
 
+  const setDrawerOpen = (open) => {
+    if (!appDrawer || !appDrawerBackdrop || !appMenuButton) return;
+    appDrawer.classList.toggle('open', open);
+    appDrawer.setAttribute('aria-hidden', String(!open));
+    appMenuButton.setAttribute('aria-expanded', String(open));
+    appDrawerBackdrop.hidden = !open;
+    requestAnimationFrame(() => appDrawerBackdrop.classList.toggle('open', open));
+  };
+
+  appMenuButton?.addEventListener('click', () => setDrawerOpen(!appDrawer?.classList.contains('open')));
+  appDrawerBackdrop?.addEventListener('click', () => setDrawerOpen(false));
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setDrawerOpen(false);
+  });
+
   const updateUrlChrome = (screenId) => {
     const urlPath = document.getElementById('urlpath');
     const route = screenToRoute[screenId] || '/';
@@ -38,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const { push = true, remember = true } = options;
     const target = document.getElementById(screenId);
     if (!target || !target.classList.contains('screen')) return;
+    setDrawerOpen(false);
     const current = document.querySelector('.screen.active');
     if (current && current.id === screenId) {
       updateUrlChrome(screenId);
@@ -101,12 +120,42 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => authToast.classList.remove('show'), 1800);
   };
 
+  let supabaseClient = null;
+  const getSupabaseClient = async () => {
+    if (supabaseClient) return supabaseClient;
+    if (!window.supabase) return null;
+
+    const localConfig = window.FRIENDS_GYM_SUPABASE || {};
+    let url = localConfig.url || '';
+    let anonKey = localConfig.anonKey || '';
+
+    if (!url || !anonKey) {
+      try {
+        const response = await fetch(`${apiBase}/api/config`);
+        if (response.ok) {
+          const serverConfig = await response.json();
+          url = serverConfig.supabaseUrl || '';
+          anonKey = serverConfig.supabaseAnonKey || '';
+        }
+      } catch {
+        return null;
+      }
+    }
+
+    if (!url || !anonKey) return null;
+    supabaseClient = window.supabase.createClient(url, anonKey);
+    return supabaseClient;
+  };
+
   if (googleAuthButton) {
     googleAuthButton.addEventListener('click', async () => {
-      const config = window.FRIENDS_GYM_SUPABASE || {};
-      if (window.supabase && config.url && config.anonKey) {
-        const client = window.supabase.createClient(config.url, config.anonKey);
-        await client.auth.signInWithOAuth({ provider: 'google' });
+      const client = await getSupabaseClient();
+      if (client) {
+        const { error } = await client.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: `${window.location.origin}/auth` }
+        });
+        if (error) showAuthToast('Google sign-in start nahi ho saka. Dobara try karein.');
         return;
       }
       showAuthToast('Google sign-in abhi setup nahi hai. Email/password se sign in karein.');
@@ -347,18 +396,138 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const workoutBoxes = document.querySelectorAll('[data-workout]');
   const trackerStatus = document.getElementById('tracker-status');
-  if (trackerStatus) {
-    const savedWorkout = JSON.parse(localStorage.getItem('friends-gym-workout') || '[]');
+  const workoutCalendar = document.getElementById('workout-calendar');
+  const calendarMonth = document.getElementById('calendar-month');
+  const calendarLiveTime = document.getElementById('calendar-live-time');
+  const calendarPrev = document.getElementById('calendar-prev');
+  const calendarNext = document.getElementById('calendar-next');
+  const calendarToday = document.getElementById('calendar-today');
+  const workoutDateTitle = document.getElementById('workout-date-title');
+  const activityTitle = document.getElementById('activity-title');
+  const activityDayLabel = document.getElementById('activity-day-label');
+
+  const readHistory = (key) => {
+    try { return JSON.parse(localStorage.getItem(key) || '{}'); }
+    catch { return {}; }
+  };
+  const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const dateFromKey = (key) => {
+    const [year, month, day] = key.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+  const startOfWeek = (date) => {
+    const value = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const mondayOffset = (value.getDay() + 6) % 7;
+    value.setDate(value.getDate() - mondayOffset);
+    return value;
+  };
+
+  const workoutHistory = readHistory('friends-gym-workouts-v2');
+  const sessionHistory = readHistory('friends-gym-sessions-v2');
+  let selectedWorkoutDate = new Date();
+  let selectedWorkoutKey = dateKey(selectedWorkoutDate);
+  let calendarWeekStart = startOfWeek(selectedWorkoutDate);
+  let lastTodayKey = selectedWorkoutKey;
+  let loadSelectedDate = () => {};
+
+  const legacyWorkout = (() => {
+    try { return JSON.parse(localStorage.getItem('friends-gym-workout') || '[]'); }
+    catch { return []; }
+  })();
+  const legacySession = (() => {
+    try { return JSON.parse(localStorage.getItem('friends-gym-session') || 'null'); }
+    catch { return null; }
+  })();
+  if (!workoutHistory[selectedWorkoutKey] && legacyWorkout.length) workoutHistory[selectedWorkoutKey] = legacyWorkout;
+  if (!sessionHistory[selectedWorkoutKey] && legacySession) sessionHistory[selectedWorkoutKey] = legacySession;
+  localStorage.setItem('friends-gym-workouts-v2', JSON.stringify(workoutHistory));
+  localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
+
+  const renderCalendar = () => {
+    if (!workoutCalendar) return;
+    workoutCalendar.replaceChildren();
+    const weekEnd = new Date(calendarWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    if (calendarMonth) {
+      const startLabel = calendarWeekStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const endLabel = weekEnd.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      calendarMonth.textContent = `${startLabel} - ${endLabel}`;
+    }
+    if (workoutDateTitle) {
+      workoutDateTitle.textContent = selectedWorkoutDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+    }
+    const todayKey = dateKey(new Date());
+    const selectedLabel = selectedWorkoutDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    if (activityTitle) activityTitle.textContent = selectedWorkoutKey === todayKey ? "Today's Activity" : `Activity for ${selectedLabel}`;
+    if (activityDayLabel) activityDayLabel.textContent = selectedWorkoutKey === todayKey ? 'Today in gym' : `Workout on ${selectedLabel}`;
+    for (let index = 0; index < 7; index += 1) {
+      const day = new Date(calendarWeekStart);
+      day.setDate(day.getDate() + index);
+      const key = dateKey(day);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'day';
+      button.dataset.date = key;
+      button.setAttribute('aria-label', day.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
+      button.classList.toggle('active', key === selectedWorkoutKey);
+      button.classList.toggle('today', key === todayKey);
+      button.classList.toggle('has-data', Boolean(workoutHistory[key]?.length || sessionHistory[key]));
+      if (key === selectedWorkoutKey) button.setAttribute('aria-pressed', 'true');
+      button.innerHTML = `<span>${day.toLocaleDateString('en-IN', { weekday: 'narrow' })}</span><span class="dot">${day.getDate()}</span>`;
+      workoutCalendar.appendChild(button);
+    }
+  };
+
+  const selectWorkoutDate = (date) => {
+    selectedWorkoutDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    selectedWorkoutKey = dateKey(selectedWorkoutDate);
+    calendarWeekStart = startOfWeek(selectedWorkoutDate);
+    renderCalendar();
+    loadSelectedDate();
+  };
+
+  const updateLiveCalendar = () => {
+    const now = new Date();
+    if (calendarLiveTime) calendarLiveTime.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const currentTodayKey = dateKey(now);
+    if (currentTodayKey !== lastTodayKey) {
+      const wasFollowingToday = selectedWorkoutKey === lastTodayKey;
+      lastTodayKey = currentTodayKey;
+      if (wasFollowingToday) selectWorkoutDate(now);
+      else renderCalendar();
+    }
+  };
+
+  workoutCalendar?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-date]');
+    if (!button) return;
+    selectWorkoutDate(dateFromKey(button.dataset.date));
+  });
+  calendarPrev?.addEventListener('click', () => {
+    calendarWeekStart.setDate(calendarWeekStart.getDate() - 7);
+    renderCalendar();
+  });
+  calendarNext?.addEventListener('click', () => {
+    calendarWeekStart.setDate(calendarWeekStart.getDate() + 7);
+    renderCalendar();
+  });
+  calendarToday?.addEventListener('click', () => selectWorkoutDate(new Date()));
+
+  const loadTrackerForDate = () => {
+    const savedWorkout = workoutHistory[selectedWorkoutKey] || [];
     workoutBoxes.forEach((box) => { box.checked = savedWorkout.includes(box.value); });
-    const updateTracker = () => {
-      const done = [...workoutBoxes].filter((box) => box.checked).length;
-      trackerStatus.textContent = `${done}/${workoutBoxes.length} completed`;
-      const completed = [...workoutBoxes].filter((box) => box.checked).map((box) => box.value);
-      localStorage.setItem('friends-gym-workout', JSON.stringify(completed));
-    };
-    workoutBoxes.forEach((box) => box.addEventListener('change', updateTracker));
-    updateTracker();
-  }
+    const done = [...workoutBoxes].filter((box) => box.checked).length;
+    if (trackerStatus) trackerStatus.textContent = `${done}/${workoutBoxes.length} completed`;
+  };
+
+  const updateTracker = () => {
+    const completed = [...workoutBoxes].filter((box) => box.checked).map((box) => box.value);
+    workoutHistory[selectedWorkoutKey] = completed;
+    localStorage.setItem('friends-gym-workouts-v2', JSON.stringify(workoutHistory));
+    loadTrackerForDate();
+    renderCalendar();
+  };
+  workoutBoxes.forEach((box) => box.addEventListener('change', updateTracker));
 
   const sessionForm = document.getElementById('session-form');
   const sessionSteps = document.getElementById('session-steps');
@@ -417,7 +586,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  updateSessionDashboard(JSON.parse(localStorage.getItem('friends-gym-session') || 'null'));
+  const clearSessionDashboard = () => {
+    if (sessionCalories) sessionCalories.textContent = '0';
+    if (sessionDistance) sessionDistance.textContent = '0.00 km';
+    if (dashboardSteps) dashboardSteps.textContent = '0';
+    if (dashboardCalories) dashboardCalories.textContent = '0 kcal';
+    if (dashboardTime) dashboardTime.textContent = '0 min';
+    if (sessionRowSteps) sessionRowSteps.textContent = '0';
+    if (sessionRowCalories) sessionRowCalories.textContent = '0';
+    if (sessionRowTime) sessionRowTime.textContent = '0m';
+    if (sessionResult) sessionResult.textContent = `No workout saved for ${selectedWorkoutDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}.`;
+  };
+
+  loadSelectedDate = () => {
+    loadTrackerForDate();
+    const savedSession = sessionHistory[selectedWorkoutKey];
+    if (savedSession) {
+      if (sessionSteps) sessionSteps.value = savedSession.steps;
+      if (sessionMinutes) sessionMinutes.value = savedSession.minutes;
+      if (sessionWorkout) sessionWorkout.value = savedSession.workout;
+      updateSessionDashboard(savedSession);
+    } else {
+      if (sessionSteps) sessionSteps.value = '';
+      if (sessionMinutes) sessionMinutes.value = '';
+      clearSessionDashboard();
+    }
+    if (liveSessionTime) liveSessionTime.textContent = '00:00';
+  };
+
+  renderCalendar();
+  loadSelectedDate();
+  updateLiveCalendar();
+  setInterval(updateLiveCalendar, 30000);
 
   if (startSession && liveSessionTime) {
     startSession.addEventListener('click', () => {
@@ -449,9 +649,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const intensity = sessionIntensity.value;
       const distanceKm = steps * 0.000762;
       const calories = calculateCalories(steps, minutes, workout, intensity);
-      const session = { steps, minutes, workout, intensity, distanceKm, calories, savedAt: new Date().toISOString() };
-      localStorage.setItem('friends-gym-session', JSON.stringify(session));
+      const session = { steps, minutes, workout, intensity, distanceKm, calories, date: selectedWorkoutKey, savedAt: new Date().toISOString() };
+      sessionHistory[selectedWorkoutKey] = session;
+      localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
       updateSessionDashboard(session);
+      renderCalendar();
     });
   }
 
@@ -460,7 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInterval(sessionTimer);
       sessionTimer = null;
       sessionStartedAt = null;
-      localStorage.removeItem('friends-gym-session');
+      delete sessionHistory[selectedWorkoutKey];
+      localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
       if (sessionForm) sessionForm.reset();
       if (liveSessionTime) liveSessionTime.textContent = '00:00';
       if (sessionCalories) sessionCalories.textContent = '0';
@@ -471,7 +674,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sessionRowSteps) sessionRowSteps.textContent = '0';
       if (sessionRowCalories) sessionRowCalories.textContent = '0';
       if (sessionRowTime) sessionRowTime.textContent = '0m';
-      if (sessionResult) sessionResult.textContent = 'Session reset. Enter new workout details to calculate again.';
+      if (sessionResult) sessionResult.textContent = 'Session reset for the selected date.';
+      renderCalendar();
     });
   }
 
@@ -564,36 +768,64 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authLogout) authLogout.hidden = false;
   };
 
+  const resetLoggedOutUi = () => {
+    localStorage.removeItem('friends-gym-user');
+    if (authTitle) authTitle.textContent = 'Login / Register';
+    if (dashboardTitle) dashboardTitle.textContent = 'Member dashboard overview';
+    authTabs.forEach((item) => { item.hidden = false; });
+    if (authForm) {
+      authForm.querySelectorAll('input').forEach((input) => {
+        input.hidden = false;
+        input.value = '';
+      });
+      const submitButton = authForm.querySelector('button');
+      if (submitButton) {
+        submitButton.textContent = 'Continue';
+        submitButton.disabled = false;
+        submitButton.hidden = false;
+      }
+    }
+    if (authLogout) authLogout.hidden = true;
+    updateAuthMode('login');
+  };
+
+  const mapSupabaseUser = (user) => ({
+    id: user.id,
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Member',
+    email: user.email || ''
+  });
+
   if (authForm && authMessage) {
     updateAuthMode('login');
-    const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
-    if (savedUser) {
-      setLoggedInUser(savedUser);
-      authMessage.textContent = 'You are signed in on this device. Logout only appears because this browser already has a saved session.';
-    }
 
     authTabs.forEach((tab) => {
       tab.addEventListener('click', () => updateAuthMode(tab.dataset.mode));
     });
 
-    if (authLogout) {
-      authLogout.addEventListener('click', () => {
-        localStorage.removeItem('friends-gym-user');
-        if (authTitle) authTitle.textContent = 'Login / Register';
-        if (dashboardTitle) dashboardTitle.textContent = 'Member dashboard overview';
-        authTabs.forEach((item) => { item.hidden = false; });
-        authForm.querySelectorAll('input').forEach((input) => {
-          input.hidden = false;
-          input.value = '';
-        });
-        const submitButton = authForm.querySelector('button');
-        if (submitButton) {
-          submitButton.textContent = 'Continue';
-          submitButton.disabled = false;
-          submitButton.hidden = false;
+    getSupabaseClient().then(async (client) => {
+      if (client) {
+        const { data } = await client.auth.getSession();
+        if (data.session?.user) {
+          setLoggedInUser(mapSupabaseUser(data.session.user));
+          authMessage.textContent = 'You are securely signed in.';
+        } else {
+          localStorage.removeItem('friends-gym-user');
         }
-        authLogout.hidden = true;
-        updateAuthMode('login');
+        client.auth.onAuthStateChange((_event, session) => {
+          if (session?.user) setLoggedInUser(mapSupabaseUser(session.user));
+        });
+        return;
+      }
+
+      const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
+      if (savedUser) setLoggedInUser(savedUser);
+    });
+
+    if (authLogout) {
+      authLogout.addEventListener('click', async () => {
+        const client = await getSupabaseClient();
+        if (client) await client.auth.signOut();
+        resetLoggedOutUi();
         authMessage.textContent = 'You have been logged out.';
       });
     }
@@ -601,17 +833,55 @@ document.addEventListener('DOMContentLoaded', () => {
     authForm.addEventListener('submit', async (event) => {
       event.preventDefault();
       const name = document.getElementById('auth-name').value.trim();
-      const email = document.getElementById('auth-email').value.trim();
+      const email = document.getElementById('auth-email').value.trim().toLowerCase();
       const password = document.getElementById('auth-password').value;
       if (!email || !password) {
         authMessage.textContent = 'Please enter your email and password.';
+        return;
+      }
+      if (password.length < 8) {
+        authMessage.textContent = 'Password must contain at least 8 characters.';
         return;
       }
       if (authMode === 'register' && !name) {
         authMessage.textContent = 'Please enter your name to register.';
         return;
       }
+
+      const submitButton = authForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
       try {
+        const client = await getSupabaseClient();
+        if (client) {
+          if (authMode === 'register') {
+            const { data, error } = await client.auth.signUp({
+              email,
+              password,
+              options: {
+                data: { full_name: name },
+                emailRedirectTo: `${window.location.origin}/auth`
+              }
+            });
+            if (error) throw error;
+            if (data.session?.user) {
+              setLoggedInUser(mapSupabaseUser(data.session.user));
+              authMessage.textContent = 'Registration successful. Welcome to Friends Gym!';
+              showAuthToast('Account created successfully.');
+              setTimeout(() => showScreen('home'), 900);
+            } else {
+              authMessage.textContent = 'Account created. Please check your email and confirm your account.';
+            }
+          } else {
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            setLoggedInUser(mapSupabaseUser(data.user));
+            authMessage.textContent = 'Login successful! Welcome back.';
+            showAuthToast('Signed in - redirecting to Home...');
+            setTimeout(() => showScreen('home'), 900);
+          }
+          return;
+        }
+
         const endpoint = `${apiBase}${authMode === 'register' ? '/api/register' : '/api/login'}`;
         const payload = authMode === 'register' ? { name, email, password } : { email, password };
         const response = await fetch(endpoint, {
@@ -620,10 +890,13 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify(payload)
         });
         const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Authentication failed.');
         authMessage.textContent = result.message || 'Request completed.';
-        if (response.ok && result.user) { setLoggedInUser(result.user); showAuthToast('Signed in - redirecting to Home...'); setTimeout(() => showScreen('home'), 900); }
+        if (result.user) setLoggedInUser(result.user);
       } catch (error) {
-        authMessage.textContent = 'Unable to reach the server. Please try again.';
+        authMessage.textContent = error.message || 'Unable to sign in. Please try again.';
+      } finally {
+        if (submitButton && !submitButton.hidden) submitButton.disabled = false;
       }
     });
   }

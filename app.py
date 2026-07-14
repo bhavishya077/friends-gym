@@ -6,6 +6,9 @@ import smtplib
 from email.message import EmailMessage
 from pathlib import Path
 
+if os.environ.get('ALLOW_LEGACY_PYTHON_SERVER') != 'true':
+    raise SystemExit('Legacy Python backend is disabled. Run npm start to use the supported Node.js server.')
+
 ROOT = Path(__file__).resolve().parent
 DATA_FILE = ROOT / 'users.json'
 LOG_FILE = ROOT / 'activity.log'

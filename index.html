@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Friends Gym - Dark App</title>
-    <meta name="description" content="Friends Gym dark mobile app for workouts, classes, nutrition, memberships, tools, auth, booking and contact." />
+    <title>Friends Gym - Train Stronger</title>
+    <meta name="description" content="Friends Gym workout, nutrition, classes and membership app." />
     <meta name="theme-color" content="#0F0F10" />
     <meta name="robots" content="index,follow" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -13,19 +13,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=15" />
+    <link rel="stylesheet" href="style.css?v=22" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js?v=22"></script>
   </head>
   <body class="dark-app-body">
-    <div class="url-bar" aria-hidden="true">
-      <div class="dots"><span></span><span></span><span></span></div>
-      <div class="path" id="urlpath">friendsgym.app/</div>
-    </div>
 
     <div class="phone" id="app-shell">
       <main class="app-main">
         <section class="screen active" id="home" data-route="/" data-title="Home">
-          <div class="topbar"><button class="icon-btn" type="button" data-screen="auth">Menu</button><h1>FRIENDS GYM</h1><div class="avatar">FG</div></div>
+          <div class="topbar"><button class="icon-btn menu-icon-btn" id="app-menu-button" type="button" aria-label="Open app menu" aria-controls="app-drawer" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button><h1>FRIENDS GYM</h1><div class="avatar">FG</div></div>
           <p class="eyebrow">Train Harder</p>
           <h2 class="headline">Push past<br />your <span>limits.</span></h2>
           <div class="hero-card" data-screen="workout" role="button" tabindex="0">
@@ -51,12 +48,15 @@
         </section>
 
         <section class="screen" id="workout" data-route="/workout" data-title="Workout">
-          <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>MONDAY 27</h1><div class="avatar">FG</div></div>
-          <div class="day-strip"><div class="day"><span>M</span><div class="dot">13</div></div><div class="day"><span>T</span><div class="dot">14</div></div><div class="day active"><span>W</span><div class="dot">15</div></div><div class="day"><span>T</span><div class="dot">16</div></div><div class="day"><span>F</span><div class="dot">17</div></div><div class="day"><span>S</span><div class="dot">18</div></div><div class="day"><span>S</span><div class="dot">19</div></div></div>
-          <div class="section-head"><h4>Today's Activity</h4><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
-          <div class="stat-row"><div class="stat-icon">S</div><div class="info"><h5>Walking</h5><p>Today in gym</p></div><div class="value"><b id="session-row-steps">0</b><span>Steps</span></div></div>
-          <div class="stat-row"><div class="stat-icon amber">T</div><div class="info"><h5>Workout</h5><p>Live session timer</p></div><div class="value"><b id="session-row-time">0m</b><span>Minutes</span></div></div>
-          <div class="stat-row"><div class="stat-icon muted-icon">K</div><div class="info"><h5>Calories</h5><p>Calculated from intensity</p></div><div class="value"><b id="session-row-calories">0</b><span>Kcal</span></div></div>
+          <div class="topbar workout-topbar"><button class="icon-btn back-icon-btn" type="button" data-back aria-label="Go back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg></button><div class="workout-heading"><span>Workout planner</span><h1 id="workout-date-title">TODAY</h1></div><div class="avatar">FG</div></div>
+          <div class="calendar-toolbar" aria-label="Workout calendar controls"><button id="calendar-prev" type="button" aria-label="Previous week">&#8249;</button><div><strong id="calendar-month">Current week</strong><span id="calendar-live-time">--:--</span></div><button id="calendar-today" type="button">Today</button><button id="calendar-next" type="button" aria-label="Next week">&#8250;</button></div>
+          <div class="day-strip" id="workout-calendar" aria-label="Select workout date"></div>
+          <div class="section-head"><h4 id="activity-title">Today's Activity</h4><span id="tracker-status" class="tracker-status">0/4 completed</span></div>
+          <div class="activity-stats">
+            <div class="stat-row"><div class="stat-icon">S</div><div class="info"><h5>Walking</h5><p id="activity-day-label">Today in gym</p></div><div class="value"><b id="session-row-steps">0</b><span>Steps</span></div></div>
+            <div class="stat-row"><div class="stat-icon amber">T</div><div class="info"><h5>Workout</h5><p>Live session timer</p></div><div class="value"><b id="session-row-time">0m</b><span>Minutes</span></div></div>
+            <div class="stat-row"><div class="stat-icon muted-icon">K</div><div class="info"><h5>Calories</h5><p>Calculated from intensity</p></div><div class="value"><b id="session-row-calories">0</b><span>Kcal</span></div></div>
+          </div>
           <div class="card session-card">
             <div class="section-head"><h4>Workout Checklist</h4></div>
             <div class="tracker-list"><label class="tracker-item"><input type="checkbox" data-workout value="Warm-up" /> Warm-up and mobility</label><label class="tracker-item"><input type="checkbox" data-workout value="Strength" /> Strength circuit</label><label class="tracker-item"><input type="checkbox" data-workout value="Cardio" /> Cardio finisher</label><label class="tracker-item"><input type="checkbox" data-workout value="Stretch" /> Cooldown stretch</label></div>
@@ -119,9 +119,22 @@
         </section>
       </main>
 
-      <nav class="bottom-nav" aria-label="App navigation"><button class="nav-icon active" id="nav-home" type="button" data-screen="home">H</button><button class="nav-icon" id="nav-classes" type="button" data-screen="classes">C</button><button class="fab" type="button" data-screen="workout">+</button><button class="nav-icon" id="nav-membership" type="button" data-screen="membership">M</button><button class="nav-icon" id="nav-auth" type="button" data-screen="auth">A</button></nav>
+      <div class="app-drawer-backdrop" id="app-drawer-backdrop" hidden></div>
+      <aside class="app-drawer" id="app-drawer" aria-label="App menu" aria-hidden="true">
+        <div class="drawer-profile"><div class="avatar">FG</div><div><strong>Friends Gym</strong><span>Train stronger every day</span></div></div>
+        <div class="drawer-links">
+          <button type="button" data-screen="home">Home</button><button type="button" data-screen="workout">Workout tracker</button><button type="button" data-screen="nutrition">Nutrition</button><button type="button" data-screen="classes">Classes</button><button type="button" data-screen="membership">Membership</button><button type="button" data-screen="tools">Fitness tools</button><button type="button" data-screen="contact">Contact & booking</button>
+        </div>
+      </aside>
+      <nav class="bottom-nav" aria-label="App navigation">
+        <button class="nav-icon active" id="nav-home" type="button" data-screen="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V21h-6v-6H9v6H3z" /></svg><span>Home</span></button>
+        <button class="nav-icon" id="nav-classes" type="button" data-screen="classes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" /></svg><span>Classes</span></button>
+        <button class="fab" type="button" data-screen="workout" aria-label="Start workout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg></button>
+        <button class="nav-icon" id="nav-membership" type="button" data-screen="membership"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 10h16M8 15h4" /></svg><span>Plans</span></button>
+        <button class="nav-icon" id="nav-auth" type="button" data-screen="auth"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4.5 21a7.5 7.5 0 0 1 15 0" /></svg><span>Account</span></button>
+      </nav>
     </div>
     <p class="caption">Friends Gym dark app. Move page to page like a mobile app.</p>
-    <script src="script.js?v=15"></script>
+    <script src="script.js?v=22"></script>
   </body>
 </html>

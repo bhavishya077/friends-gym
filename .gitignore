@@ -9,3 +9,8 @@ activity.log
 *.jks
 android/.gradle/
 android/app/build/
+
+.pnpm-store/
+__pycache__/
+
+.review-data/

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'friends-gym-v15';
+const CACHE_NAME = 'friends-gym-v22';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/style.css',
   '/script.js',
+  '/supabase-config.js',
   '/manifest.webmanifest',
   '/icons/icon.svg',
   '/pexels-arturo-eg-22214041-6628962.jpg',
