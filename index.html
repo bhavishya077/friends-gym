@@ -121,9 +121,21 @@
 
         <section class="screen" id="auth" data-route="/auth" data-title="Auth">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>SIGN IN</h1><div style="width:38px"></div></div>
-          <div class="auth-wrap"><div class="auth-logo"></div><h2>Welcome Back</h2><p>Sign in to save your progress and manage your membership</p><button class="google-btn" id="google-auth" type="button">G Continue with Google</button><div class="divider">or</div><form id="auth-form" class="auth-form"><input id="auth-name" class="auth-input" type="text" placeholder="Name" /><input id="auth-email" class="auth-input" type="email" placeholder="Email address" required /><input id="auth-password" class="auth-input" type="password" placeholder="Password" required /><button class="btn-primary" type="submit">Sign In</button></form><div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Sign In</button><button class="auth-tab" type="button" data-mode="register">Sign Up</button></div><a class="btn btn-secondary" href="/admin" id="admin-dashboard-link">Gym Admin Dashboard</a><button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button><div class="auth-toast" id="authToast">Signed in - redirecting to Home...</div><p id="auth-message" class="result-box">Use email/password or connect Supabase for Google sign-in.</p></div>
+          <div class="auth-wrap"><div class="auth-logo"></div><h2 id="auth-title">Welcome Back</h2><p>Sign in to save your progress and manage your membership</p><button class="google-btn" id="google-auth" type="button">G Continue with Google</button><div class="divider">or</div><form id="auth-form" class="auth-form"><input id="auth-name" class="auth-input" type="text" placeholder="Name" /><input id="auth-email" class="auth-input" type="email" placeholder="Email address" required /><input id="auth-password" class="auth-input" type="password" placeholder="Password" required /><button class="btn-primary" type="submit">Sign In</button></form><div class="auth-tabs"><button class="auth-tab active" type="button" data-mode="login">Sign In</button><button class="auth-tab" type="button" data-mode="register">Sign Up</button></div><a class="btn btn-secondary" href="/admin" id="admin-dashboard-link" hidden>Gym Admin Dashboard</a><button class="btn btn-secondary auth-logout" id="auth-logout" type="button" hidden>Logout</button><div class="auth-toast" id="authToast">Signed in - opening your dashboard...</div><p id="auth-message" class="result-box">Use email/password or Google to sign in.</p></div>
         </section>
 
+        <section class="screen" id="profile" data-route="/profile" data-title="My Dashboard">
+          <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>MY DASHBOARD</h1><div class="avatar" id="profile-avatar">FG</div></div>
+          <div class="member-identity-card"><div class="member-avatar" id="profile-avatar-large">FG</div><div><span class="member-eyebrow">SIGNED IN AS</span><h2 id="profile-name">Member</h2><p id="profile-email">Loading account...</p></div><span class="member-role" id="profile-role">MEMBER</span></div>
+          <div class="member-id-card"><span>MEMBER ID</span><strong id="profile-member-id">Loading...</strong><small>Your secure Friends Gym account</small></div>
+          <div class="profile-section-head"><div><span>YOUR ACTIVITY</span><h3>Fitness totals</h3></div><small>On this device</small></div>
+          <div class="profile-metrics"><div><span>STEPS</span><strong id="profile-total-steps">0</strong><small>Total steps</small></div><div><span>CALORIES</span><strong id="profile-total-calories">0</strong><small>kcal burned</small></div><div><span>TIME</span><strong id="profile-total-time">0</strong><small>workout min</small></div></div>
+          <div class="profile-section-head"><div><span>MEMBERSHIP</span><h3>Your current plan</h3></div><span class="membership-status" id="profile-membership-status">CHECKING</span></div>
+          <div class="profile-plan-card"><div><span>PLAN</span><strong id="profile-plan">Loading...</strong></div><div class="profile-plan-grid"><p><span>START DATE</span><b id="profile-plan-start">--</b></p><p><span>VALID UNTIL</span><b id="profile-plan-expiry">--</b></p><p><span>AMOUNT</span><b id="profile-plan-amount">--</b></p></div><p class="profile-plan-note" id="profile-plan-note">Checking your membership details...</p></div>
+          <button class="btn btn-primary" type="button" data-screen="workout">Start today's workout</button>
+          <a class="btn btn-secondary" href="/admin" id="profile-admin-link" hidden>Open Admin Dashboard</a>
+          <button class="btn btn-secondary" id="profile-logout" type="button">Logout</button>
+        </section>
         <section class="screen" id="contact" data-route="/contact" data-title="Contact">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>CONTACT</h1><div class="avatar">FG</div></div>
           <div class="card"><h3>Book a visit</h3><form id="booking-form" class="stack form-plain"><input id="booking-name" type="text" placeholder="Your name" required /><input id="booking-phone" type="tel" placeholder="Phone number" required /><select id="booking-plan"><option value="Starter">Starter trial</option><option value="Pro">Pro coaching</option><option value="Elite">Elite membership</option></select><button class="btn btn-primary" type="submit">Request callback</button></form><div id="booking-result" class="result-box">Send a callback request to the gym team.</div></div>
@@ -136,7 +148,7 @@
       <aside class="app-drawer" id="app-drawer" aria-label="App menu" aria-hidden="true">
         <div class="drawer-profile"><div class="avatar">FG</div><div><strong>Friends Gym</strong><span>Train stronger every day</span></div></div>
         <div class="drawer-links">
-          <button type="button" data-screen="home">Home</button><button type="button" data-screen="workout">Workout tracker</button><button type="button" data-screen="nutrition">Nutrition</button><button type="button" data-screen="classes">Classes</button><button type="button" data-screen="membership">Membership</button><button type="button" data-screen="tools">Fitness tools</button><button type="button" data-screen="contact">Contact & booking</button>
+          <button type="button" data-screen="home">Home</button><button type="button" data-screen="profile">My dashboard</button><button type="button" data-screen="workout">Workout tracker</button><button type="button" data-screen="nutrition">Nutrition</button><button type="button" data-screen="classes">Classes</button><button type="button" data-screen="membership">Membership</button><button type="button" data-screen="tools">Fitness tools</button><button type="button" data-screen="contact">Contact & booking</button>
         </div>
       </aside>
       <nav class="bottom-nav" aria-label="App navigation">
@@ -148,6 +160,6 @@
       </nav>
     </div>
     <p class="caption">Friends Gym dark app. Move page to page like a mobile app.</p>
-    <script src="script.js?v=30"></script>
+    <script src="script.js?v=31"></script>
   </body>
 </html>

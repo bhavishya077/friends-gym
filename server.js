@@ -239,7 +239,7 @@ function serveStatic(req, res) {
         fs.createReadStream(path.join(ROOT, 'admin.html')).pipe(res);
         return;
       }
-      const appRoutes = new Set(['/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/contact']);
+      const appRoutes = new Set(['/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
       if (req.method === 'GET' && appRoutes.has(requestedPath)) {
         res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'index.html')) });
         fs.createReadStream(path.join(ROOT, 'index.html')).pipe(res);

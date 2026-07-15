@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     '/membership': 'membership',
     '/tools': 'tools',
     '/auth': 'auth',
+    '/profile': 'profile',
     '/contact': 'contact'
   };
   const screenToRoute = Object.fromEntries(Object.entries(routeToScreen).map(([route, screen]) => [screen, route]));
@@ -27,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     home: 'nav-home',
     classes: 'nav-classes',
     membership: 'nav-membership',
-    auth: 'nav-auth'
+    auth: 'nav-auth',
+    profile: 'nav-auth'
   };
   const screenHistory = ['home'];
 
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const googleAuthButton = document.getElementById('google-auth');
   const authToast = document.getElementById('authToast');
-  const showAuthToast = (message = 'Signed in - redirecting to Home...') => {
+  const showAuthToast = (message = 'Signed in - opening your dashboard...') => {
     if (!authToast) return;
     authToast.textContent = message;
     authToast.classList.add('show');
@@ -652,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const session = { steps, minutes, workout, intensity, distanceKm, calories, date: selectedWorkoutKey, savedAt: new Date().toISOString() };
       sessionHistory[selectedWorkoutKey] = session;
       localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
+      updateLocalActivityTotals();
       updateSessionDashboard(session);
       renderCalendar();
     });
@@ -791,10 +794,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const mapSupabaseUser = (user) => ({
     id: user.id,
-    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Member',
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.name || user.email?.split('@')[0] || 'Member',
     email: user.email || ''
   });
 
+  const accountNav = document.getElementById('nav-auth');
+  const adminDashboardLink = document.getElementById('admin-dashboard-link');
+  const profileAdminLink = document.getElementById('profile-admin-link');
+  const profileLogout = document.getElementById('profile-logout');
+  const profileText = (id, value) => {
+    const element = document.getElementById(id);
+    if (element) element.textContent = value;
+  };
+  const niceProfileDate = (value) => {
+    if (!value) return '--';
+    const date = new Date(`${value}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+  const updateLocalActivityTotals = () => {
+    const totals = Object.values(sessionHistory).reduce((sum, session) => {
+      sum.steps += Number(session?.steps) || 0;
+      sum.calories += Number(session?.calories) || 0;
+      sum.minutes += Number(session?.minutes) || 0;
+      return sum;
+    }, { steps: 0, calories: 0, minutes: 0 });
+    profileText('profile-total-steps', Math.round(totals.steps).toLocaleString('en-IN'));
+    profileText('profile-total-calories', Math.round(totals.calories).toLocaleString('en-IN'));
+    profileText('profile-total-time', Math.round(totals.minutes).toLocaleString('en-IN'));
+  };
+  const populateMemberIdentity = (user, profile = {}) => {
+    const mapped = mapSupabaseUser(user);
+    const name = profile.full_name || mapped.name || 'Member';
+    const initials = name.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase() || 'FG';
+    profileText('profile-name', name);
+    profileText('profile-email', mapped.email || 'Email not available');
+    profileText('profile-member-id', `FG-${String(mapped.id || 'MEMBER').replace(/-/g, '').slice(0, 8).toUpperCase()}`);
+    profileText('profile-role', (profile.role || 'member').toUpperCase());
+    profileText('profile-avatar', initials);
+    profileText('profile-avatar-large', initials);
+    const isAdmin = profile.role === 'admin';
+    if (adminDashboardLink) adminDashboardLink.hidden = !isAdmin;
+    if (profileAdminLink) profileAdminLink.hidden = !isAdmin;
+    updateLocalActivityTotals();
+  };
+  const populateMembership = (membership) => {
+    const status = membership?.status || 'none';
+    profileText('profile-membership-status', status === 'none' ? 'NO ACTIVE PLAN' : status.toUpperCase());
+    profileText('profile-plan', membership?.plan_name || 'No membership assigned');
+    profileText('profile-plan-start', niceProfileDate(membership?.starts_on));
+    profileText('profile-plan-expiry', niceProfileDate(membership?.expires_on));
+    profileText('profile-plan-amount', membership?.amount_inr ? `Rs ${Number(membership.amount_inr).toLocaleString('en-IN')}` : '--');
+    profileText('profile-plan-note', membership ? 'Membership details are synced securely with the gym.' : 'Ask the gym admin to assign or activate your membership.');
+    const badge = document.getElementById('profile-membership-status');
+    if (badge) badge.dataset.status = status;
+  };
+  const loadMemberDashboard = async (user, { redirect = false } = {}) => {
+    if (!user) return;
+    const mapped = mapSupabaseUser(user);
+    setLoggedInUser(mapped);
+    populateMemberIdentity(user);
+    populateMembership(null);
+    const client = await getSupabaseClient();
+    if (client) {
+      const [{ data: profile }, { data: membership }] = await Promise.all([
+        client.from('profiles').select('full_name, phone, role, created_at').eq('id', user.id).maybeSingle(),
+        client.from('memberships').select('plan_name, status, starts_on, expires_on, amount_inr, created_at').eq('member_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      ]);
+      populateMemberIdentity(user, profile || {});
+      populateMembership(membership || null);
+    }
+    if (accountNav) accountNav.dataset.screen = 'profile';
+    if (redirect || window.location.pathname === '/auth') showScreen('profile');
+  };
+  const logoutMember = async () => {
+    const client = await getSupabaseClient();
+    if (client) await client.auth.signOut();
+    resetLoggedOutUi();
+    if (accountNav) accountNav.dataset.screen = 'auth';
+    if (adminDashboardLink) adminDashboardLink.hidden = true;
+    if (profileAdminLink) profileAdminLink.hidden = true;
+    if (authMessage) authMessage.textContent = 'You have been logged out.';
+    showScreen('auth');
+  };
   if (authForm && authMessage) {
     updateAuthMode('login');
 
@@ -806,29 +887,30 @@ document.addEventListener('DOMContentLoaded', () => {
       if (client) {
         const { data } = await client.auth.getSession();
         if (data.session?.user) {
-          setLoggedInUser(mapSupabaseUser(data.session.user));
+          await loadMemberDashboard(data.session.user);
           authMessage.textContent = 'You are securely signed in.';
         } else {
           localStorage.removeItem('friends-gym-user');
+          if (window.location.pathname === '/profile') showScreen('auth');
         }
-        client.auth.onAuthStateChange((_event, session) => {
-          if (session?.user) setLoggedInUser(mapSupabaseUser(session.user));
+        client.auth.onAuthStateChange((event, session) => {
+          if (session?.user) setTimeout(() => loadMemberDashboard(session.user, { redirect: event === 'SIGNED_IN' }), 0);
         });
         return;
       }
 
       const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
-      if (savedUser) setLoggedInUser(savedUser);
+      if (savedUser) {
+        setLoggedInUser(savedUser);
+        populateMemberIdentity(savedUser);
+        if (accountNav) accountNav.dataset.screen = 'profile';
+      } else if (window.location.pathname === '/profile') {
+        showScreen('auth');
+      }
     });
 
-    if (authLogout) {
-      authLogout.addEventListener('click', async () => {
-        const client = await getSupabaseClient();
-        if (client) await client.auth.signOut();
-        resetLoggedOutUi();
-        authMessage.textContent = 'You have been logged out.';
-      });
-    }
+    if (authLogout) authLogout.addEventListener('click', logoutMember);
+    if (profileLogout) profileLogout.addEventListener('click', logoutMember);
 
     authForm.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -864,20 +946,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (error) throw error;
             if (data.session?.user) {
-              setLoggedInUser(mapSupabaseUser(data.session.user));
+              await loadMemberDashboard(data.session.user, { redirect: true });
               authMessage.textContent = 'Registration successful. Welcome to Friends Gym!';
               showAuthToast('Account created successfully.');
-              setTimeout(() => showScreen('home'), 900);
+
             } else {
               authMessage.textContent = 'Account created. Please check your email and confirm your account.';
             }
           } else {
             const { data, error } = await client.auth.signInWithPassword({ email, password });
             if (error) throw error;
-            setLoggedInUser(mapSupabaseUser(data.user));
+            await loadMemberDashboard(data.user, { redirect: true });
             authMessage.textContent = 'Login successful! Welcome back.';
-            showAuthToast('Signed in - redirecting to Home...');
-            setTimeout(() => showScreen('home'), 900);
+            showAuthToast('Signed in - opening your dashboard...');
           }
           return;
         }
