@@ -163,7 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const { error } = await client.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: `${window.location.origin}/auth` }
+          options: {
+            redirectTo: window.location.origin,
+            queryParams: { prompt: 'select_account' }
+          }
         });
         if (error) showAuthToast('Google sign-in start nahi ho saka. Dobara try karein.');
         return;
