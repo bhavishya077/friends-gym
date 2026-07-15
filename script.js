@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
+  let verifiedSessionUser = null;
 
   const routeToScreen = {
     '/': 'home',
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showScreen = (screenId, options = {}) => {
     const { push = true, remember = true } = options;
+    if (screenId === 'profile' && !verifiedSessionUser) screenId = 'auth';
     const target = document.getElementById(screenId);
     if (!target || !target.classList.contains('screen')) return;
     setDrawerOpen(false);
@@ -115,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const googleAuthButton = document.getElementById('google-auth');
   const authToast = document.getElementById('authToast');
-  const showAuthToast = (message = 'Signed in - opening your dashboard...') => {
+  const showAuthToast = (message = 'Signed in - opening Home...') => {
     if (!authToast) return;
     authToast.textContent = message;
     authToast.classList.add('show');
@@ -153,6 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
     googleAuthButton.addEventListener('click', async () => {
       const client = await getSupabaseClient();
       if (client) {
+        const { data: existing } = await client.auth.getSession();
+        if (existing.session?.user) {
+          await loadMemberDashboard(existing.session.user, { redirect: true });
+          showAuthToast('Already signed in. Logout before using another account.');
+          return;
+        }
         const { error } = await client.auth.signInWithOAuth({
           provider: 'google',
           options: { redirectTo: `${window.location.origin}/auth` }
@@ -424,8 +432,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return value;
   };
 
-  const workoutHistory = readHistory('friends-gym-workouts-v2');
-  const sessionHistory = readHistory('friends-gym-sessions-v2');
+  let activeActivityOwner = 'guest';
+  const workoutHistoryKey = () => `friends-gym-workouts-v3:${activeActivityOwner}`;
+  const sessionHistoryKey = () => `friends-gym-sessions-v3:${activeActivityOwner}`;
+  const trainerDoneKey = () => `friends-gym-trainer-done-v2:${activeActivityOwner}`;
+  let reloadTrainerForOwner = () => {};
+  const workoutHistory = readHistory(workoutHistoryKey());
+  const sessionHistory = readHistory(sessionHistoryKey());
   let selectedWorkoutDate = new Date();
   let selectedWorkoutKey = dateKey(selectedWorkoutDate);
   let calendarWeekStart = startOfWeek(selectedWorkoutDate);
@@ -442,8 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
   if (!workoutHistory[selectedWorkoutKey] && legacyWorkout.length) workoutHistory[selectedWorkoutKey] = legacyWorkout;
   if (!sessionHistory[selectedWorkoutKey] && legacySession) sessionHistory[selectedWorkoutKey] = legacySession;
-  localStorage.setItem('friends-gym-workouts-v2', JSON.stringify(workoutHistory));
-  localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
+  localStorage.setItem(workoutHistoryKey(), JSON.stringify(workoutHistory));
+  localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
 
   const renderCalendar = () => {
     if (!workoutCalendar) return;
@@ -525,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const updateTracker = () => {
     const completed = [...workoutBoxes].filter((box) => box.checked).map((box) => box.value);
     workoutHistory[selectedWorkoutKey] = completed;
-    localStorage.setItem('friends-gym-workouts-v2', JSON.stringify(workoutHistory));
+    localStorage.setItem(workoutHistoryKey(), JSON.stringify(workoutHistory));
     loadTrackerForDate();
     renderCalendar();
   };
@@ -653,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const calories = calculateCalories(steps, minutes, workout, intensity);
       const session = { steps, minutes, workout, intensity, distanceKm, calories, date: selectedWorkoutKey, savedAt: new Date().toISOString() };
       sessionHistory[selectedWorkoutKey] = session;
-      localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
+      localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
       updateLocalActivityTotals();
       updateSessionDashboard(session);
       renderCalendar();
@@ -666,7 +679,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionTimer = null;
       sessionStartedAt = null;
       delete sessionHistory[selectedWorkoutKey];
-      localStorage.setItem('friends-gym-sessions-v2', JSON.stringify(sessionHistory));
+      localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
       if (sessionForm) sessionForm.reset();
       if (liveSessionTime) liveSessionTime.textContent = '00:00';
       if (sessionCalories) sessionCalories.textContent = '0';
@@ -682,6 +695,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const replaceHistory = (target, source) => {
+    Object.keys(target).forEach((key) => delete target[key]);
+    Object.assign(target, source && typeof source === 'object' ? source : {});
+  };
+  const switchActivityOwner = (ownerId = 'guest') => {
+    const nextOwner = String(ownerId || 'guest').replace(/[^a-zA-Z0-9-]/g, '') || 'guest';
+    if (nextOwner === activeActivityOwner) return;
+    activeActivityOwner = nextOwner;
+    replaceHistory(workoutHistory, readHistory(workoutHistoryKey()));
+    replaceHistory(sessionHistory, readHistory(sessionHistoryKey()));
+    stopSession?.click();
+    renderCalendar();
+    loadSelectedDate();
+    if (typeof updateLocalActivityTotals === 'function') updateLocalActivityTotals();
+    reloadTrainerForOwner();
+  };
   const dietForm = document.getElementById('diet-form');
   const dietResult = document.getElementById('diet-result');
   if (dietForm && dietResult) {
@@ -736,11 +765,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const dashboardTitle = document.getElementById('dashboard-title');
   const authNameInput = document.getElementById('auth-name');
   const authLogout = document.getElementById('auth-logout');
+  const authDivider = document.querySelector('#auth .divider');
   let authMode = 'login';
 
   const updateAuthMode = (mode) => {
     authMode = mode;
     authTabs.forEach((item) => item.classList.toggle('active', item.dataset.mode === mode));
+    const passwordInput = document.getElementById('auth-password');
+    if (passwordInput) passwordInput.autocomplete = mode === 'register' ? 'new-password' : 'current-password';
     if (authNameInput) {
       authNameInput.hidden = mode !== 'register';
       authNameInput.required = mode === 'register';
@@ -755,7 +787,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setLoggedInUser = (user) => {
     const userName = user.name || user.email;
+    verifiedSessionUser = user;
     localStorage.setItem('friends-gym-user', JSON.stringify(user));
+    switchActivityOwner(user.id);
     if (authTitle) authTitle.textContent = `Welcome, ${userName}`;
     if (dashboardTitle) dashboardTitle.textContent = `Welcome back, ${userName}`;
     authTabs.forEach((item) => { item.hidden = true; });
@@ -768,11 +802,18 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.hidden = true;
       }
     }
+    if (googleAuthButton) googleAuthButton.hidden = true;
+    if (authDivider) authDivider.hidden = true;
+    if (authForm) authForm.hidden = true;
     if (authLogout) authLogout.hidden = false;
+    const accountLabel = accountNav?.querySelector('span');
+    if (accountLabel) accountLabel.textContent = 'Profile';
   };
 
   const resetLoggedOutUi = () => {
+    verifiedSessionUser = null;
     localStorage.removeItem('friends-gym-user');
+    switchActivityOwner('guest');
     if (authTitle) authTitle.textContent = 'Login / Register';
     if (dashboardTitle) dashboardTitle.textContent = 'Member dashboard overview';
     authTabs.forEach((item) => { item.hidden = false; });
@@ -788,7 +829,12 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.hidden = false;
       }
     }
+    if (googleAuthButton) googleAuthButton.hidden = false;
+    if (authDivider) authDivider.hidden = false;
+    if (authForm) authForm.hidden = false;
     if (authLogout) authLogout.hidden = true;
+    const accountLabel = accountNav?.querySelector('span');
+    if (accountLabel) accountLabel.textContent = 'Account';
     updateAuthMode('login');
   };
 
@@ -856,15 +902,26 @@ document.addEventListener('DOMContentLoaded', () => {
     populateMembership(null);
     const client = await getSupabaseClient();
     if (client) {
-      const [{ data: profile }, { data: membership }] = await Promise.all([
+      const [profileResult, membershipResult] = await Promise.all([
         client.from('profiles').select('full_name, phone, role, created_at').eq('id', user.id).maybeSingle(),
         client.from('memberships').select('plan_name, status, starts_on, expires_on, amount_inr, created_at').eq('member_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle()
       ]);
-      populateMemberIdentity(user, profile || {});
-      populateMembership(membership || null);
+      if (profileResult.error) {
+        populateMemberIdentity(user, { role: 'member' });
+        if (authMessage) authMessage.textContent = 'Your secure profile could not be loaded. Please refresh or sign in again.';
+      } else {
+        populateMemberIdentity(user, profileResult.data || {});
+      }
+      if (membershipResult.error) {
+        profileText('profile-membership-status', 'UNAVAILABLE');
+        profileText('profile-plan', 'Membership could not be loaded');
+        profileText('profile-plan-note', 'Please refresh or contact the gym if this continues.');
+      } else {
+        populateMembership(membershipResult.data || null);
+      }
     }
     if (accountNav) accountNav.dataset.screen = 'profile';
-    if (redirect || window.location.pathname === '/auth') showScreen('profile');
+    if (redirect || window.location.pathname === '/auth') showScreen('home');
   };
   const logoutMember = async () => {
     const client = await getSupabaseClient();
@@ -884,31 +941,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     getSupabaseClient().then(async (client) => {
-      if (client) {
-        const { data } = await client.auth.getSession();
-        if (data.session?.user) {
-          await loadMemberDashboard(data.session.user);
-          authMessage.textContent = 'You are securely signed in.';
-        } else {
-          localStorage.removeItem('friends-gym-user');
-          if (window.location.pathname === '/profile') showScreen('auth');
-        }
-        client.auth.onAuthStateChange((event, session) => {
-          if (session?.user) setTimeout(() => loadMemberDashboard(session.user, { redirect: event === 'SIGNED_IN' }), 0);
-        });
+      if (!client) {
+        resetLoggedOutUi();
+        authMessage.textContent = 'Secure login is temporarily unavailable. Please try again later.';
+        if (window.location.pathname === '/profile') showScreen('auth');
         return;
       }
-
-      const savedUser = JSON.parse(localStorage.getItem('friends-gym-user') || 'null');
-      if (savedUser) {
-        setLoggedInUser(savedUser);
-        populateMemberIdentity(savedUser);
-        if (accountNav) accountNav.dataset.screen = 'profile';
-      } else if (window.location.pathname === '/profile') {
+      const { data, error } = await client.auth.getSession();
+      if (error) {
+        resetLoggedOutUi();
+        authMessage.textContent = 'Your session could not be verified. Please sign in again.';
         showScreen('auth');
+      } else if (data.session?.user) {
+        await loadMemberDashboard(data.session.user);
+        authMessage.textContent = 'You are securely signed in. Logout before using another account on this device.';
+      } else {
+        resetLoggedOutUi();
+        if (window.location.pathname === '/profile') showScreen('auth');
       }
+      client.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          setTimeout(() => loadMemberDashboard(session.user, { redirect: true }), 0);
+        }
+        if (event === 'SIGNED_OUT') {
+          setTimeout(() => {
+            resetLoggedOutUi();
+            if (document.getElementById('profile')?.classList.contains('active')) showScreen('auth');
+          }, 0);
+        }
+      });
     });
-
     if (authLogout) authLogout.addEventListener('click', logoutMember);
     if (profileLogout) profileLogout.addEventListener('click', logoutMember);
 
@@ -958,22 +1020,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
             await loadMemberDashboard(data.user, { redirect: true });
             authMessage.textContent = 'Login successful! Welcome back.';
-            showAuthToast('Signed in - opening your dashboard...');
+            showAuthToast('Signed in - opening Home...');
           }
           return;
         }
 
-        const endpoint = `${apiBase}${authMode === 'register' ? '/api/register' : '/api/login'}`;
-        const payload = authMode === 'register' ? { name, email, password } : { email, password };
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || 'Authentication failed.');
-        authMessage.textContent = result.message || 'Request completed.';
-        if (result.user) setLoggedInUser(result.user);
+        throw new Error('Secure login is unavailable. Please try again later.');
       } catch (error) {
         authMessage.textContent = error.message || 'Unable to sign in. Please try again.';
       } finally {
@@ -1012,6 +1064,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  document.querySelectorAll('[data-plan]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const planSelect = document.getElementById('booking-plan');
+      if (planSelect) planSelect.value = button.dataset.plan;
+      if (bookingResult) bookingResult.textContent = `${button.dataset.plan} selected. Send your callback request to continue.`;
+    });
+  });
   const contactForm = document.getElementById('contact-form');
   const contactResult = document.getElementById('contact-result');
   if (contactForm && contactResult) {
@@ -1046,7 +1105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let trainerActive = 0;
     let trainerTimer = null;
     let trainerSeconds = trainerExercises[0].rest;
-    const trainerDone = new Set(JSON.parse(localStorage.getItem('friends-gym-trainer-done') || '[]'));
+    const trainerDone = new Set(JSON.parse(localStorage.getItem(trainerDoneKey()) || '[]'));
     const trainerClock = document.getElementById('trainer-rest-clock');
     const trainerComplete = document.getElementById('trainer-complete');
     const trainerRestButton = document.getElementById('trainer-rest-start');
@@ -1059,7 +1118,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     document.getElementById('trainer-video')?.addEventListener('click',event=>{if(event.currentTarget.paused)event.currentTarget.play().catch(()=>{});else event.currentTarget.pause();});
     trainerPicker.addEventListener('click',event=>{const button=event.target.closest('[data-trainer-index]');if(!button)return;trainerActive=Number(button.dataset.trainerIndex);renderTrainer();});
-    trainerComplete.addEventListener('click',()=>{const id=trainerExercises[trainerActive].id;if(trainerDone.has(id))trainerDone.delete(id);else trainerDone.add(id);localStorage.setItem('friends-gym-trainer-done',JSON.stringify([...trainerDone]));renderTrainer();});
+    reloadTrainerForOwner=()=>{trainerDone.clear();JSON.parse(localStorage.getItem(trainerDoneKey())||'[]').forEach(id=>trainerDone.add(id));renderTrainer();};
+    trainerComplete.addEventListener('click',()=>{const id=trainerExercises[trainerActive].id;if(trainerDone.has(id))trainerDone.delete(id);else trainerDone.add(id);localStorage.setItem(trainerDoneKey(),JSON.stringify([...trainerDone]));renderTrainer();});
     trainerRestButton.addEventListener('click',()=>{if(trainerTimer){clearInterval(trainerTimer);trainerTimer=null;trainerRestButton.firstChild.textContent='Resume rest ';return;}if(trainerSeconds<=0)trainerSeconds=trainerExercises[trainerActive].rest;trainerRestButton.firstChild.textContent='Pause rest ';trainerTimer=setInterval(()=>{trainerSeconds-=1;renderTrainerClock();if(trainerSeconds<=0){clearInterval(trainerTimer);trainerTimer=null;trainerRestButton.firstChild.textContent='Rest complete ';if(navigator.vibrate)navigator.vibrate([120,80,120]);}},1000);});
     renderTrainer();
   }

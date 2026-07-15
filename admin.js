@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   const config = window.FRIENDS_GYM_SUPABASE || {};
   const client = window.supabase?.createClient(config.url, config.anonKey);
   const locked = document.getElementById('admin-locked');
@@ -6,6 +6,7 @@
   const message = document.getElementById('message');
   let members = [], memberships = [], attendance = [];
   const say = (text, error = false) => { message.textContent = text; message.classList.toggle('error', error); };
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, character => `&#${character.charCodeAt(0)};`);
   const memberName = (m) => m.full_name || m.phone || `Member ${m.id.slice(0, 6)}`;
   const niceDate = (v) => v ? new Intl.DateTimeFormat('en-IN',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(v)) : 'Not set';
   const render = () => {
@@ -13,13 +14,13 @@
     const filtered = members.filter(m => `${m.full_name || ''} ${m.phone || ''}`.toLowerCase().includes(q));
     document.getElementById('member-list').innerHTML = filtered.length ? filtered.map(m => {
       const plan = memberships.find(p => p.member_id === m.id);
-      return `<article class="record"><div class="avatar">${memberName(m).charAt(0).toUpperCase()}</div><div><strong>${memberName(m)}</strong><span>${m.phone || 'Phone not added'}</span></div><div class="state ${plan?.status || ''}"><b>${plan?.plan_name || 'No plan'}</b><span>${plan ? niceDate(plan.expires_on) : 'Not active'}</span></div></article>`;
+      return `<article class="record"><div class="avatar">${escapeHtml(memberName(m).charAt(0).toUpperCase())}</div><div><strong>${escapeHtml(memberName(m))}</strong><span>${escapeHtml(m.phone || 'Phone not added')}</span></div><div class="state ${escapeHtml(plan?.status || '')}"><b>${escapeHtml(plan?.plan_name || 'No plan')}</b><span>${plan ? niceDate(plan.expires_on) : 'Not active'}</span></div></article>`;
     }).join('') : '<p class="empty">No matching members.</p>';
-    const options = members.map(m => `<option value="${m.id}">${memberName(m)}</option>`).join('');
+    const options = members.map(m => `<option value="${escapeHtml(m.id)}">${escapeHtml(memberName(m))}</option>`).join('');
     ['membership-member','attendance-member'].forEach(id => document.getElementById(id).innerHTML = `<option value="">Select member</option>${options}`);
     document.getElementById('attendance-list').innerHTML = attendance.slice(0,5).map(a => {
       const m = members.find(x => x.id === a.member_id);
-      return `<article class="record"><div class="avatar">✓</div><div><strong>${m ? memberName(m) : 'Member'}</strong><span>${new Date(a.checked_in_at).toLocaleString('en-IN')}</span></div><div class="state active"><b>Checked in</b><span>${a.check_in_method}</span></div></article>`;
+      return `<article class="record"><div class="avatar">OK</div><div><strong>${escapeHtml(m ? memberName(m) : 'Member')}</strong><span>${new Date(a.checked_in_at).toLocaleString('en-IN')}</span></div><div class="state active"><b>Checked in</b><span>${escapeHtml(a.check_in_method)}</span></div></article>`;
     }).join('') || '<p class="empty">No attendance yet.</p>';
     const today = new Date().toISOString().slice(0,10);
     document.getElementById('member-total').textContent = members.length;

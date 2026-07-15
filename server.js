@@ -53,7 +53,8 @@ const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 const ACTIVITY_FILE = path.join(DATA_DIR, 'activity.log');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
+const ALLOWED_ORIGIN = String(process.env.ALLOWED_ORIGIN || '').trim();
+const MAX_BODY_BYTES = 64 * 1024;
 const rateLimits = new Map();
 
 if (!fs.existsSync(DATA_FILE)) {
@@ -108,17 +109,26 @@ function verifyPassword(password, stored) {
 }
 
 function isRateLimited(req) {
-  const key = req.socket.remoteAddress || 'unknown';
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const key = forwarded || req.socket.remoteAddress || 'unknown';
   const now = Date.now();
   const recent = (rateLimits.get(key) || []).filter(time => now - time < 60000);
   recent.push(now);
   rateLimits.set(key, recent);
-  return recent.length > 40;
+  if (rateLimits.size > 5000) {
+    for (const [entryKey, times] of rateLimits) {
+      if (!times.some(time => now - time < 60000)) rateLimits.delete(entryKey);
+    }
+  }
+  const sensitiveWrite = req.method === 'POST' && ['/api/bookings', '/api/contact'].includes(new URL(req.url, 'http://localhost').pathname);
+  return recent.length > (sensitiveWrite ? 10 : 30);
 }
 
 function isAdmin(req) {
-  const token = req.headers.authorization || '';
-  return Boolean(ADMIN_TOKEN) && token === `Bearer ${ADMIN_TOKEN}`;
+  if (!ADMIN_TOKEN) return false;
+  const supplied = Buffer.from(String(req.headers.authorization || ''));
+  const expected = Buffer.from(`Bearer ${ADMIN_TOKEN}`);
+  return supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
 }
 
 async function sendOwnerEmail(subject, text) {
@@ -183,20 +193,54 @@ async function notifyOwner(subject, text) {
 
 function readBody(req, callback) {
   let body = '';
-  req.on('data', chunk => body += chunk);
+  let bytes = 0;
+  let finished = false;
+  const finish = (error, value) => {
+    if (finished) return;
+    finished = true;
+    callback(error, value);
+  };
+  req.on('data', chunk => {
+    bytes += chunk.length;
+    if (bytes > MAX_BODY_BYTES) {
+      finish(new Error('Request body is too large.'));
+      req.pause();
+      return;
+    }
+    body += chunk;
+  });
   req.on('end', () => {
+    if (finished) return;
     try {
-      callback(null, JSON.parse(body || '{}'));
+      finish(null, JSON.parse(body || '{}'));
     } catch {
-      callback(new Error('Invalid request data.'));
+      finish(new Error('Invalid request data.'));
     }
   });
+  req.on('error', () => finish(new Error('Unable to read request data.')));
 }
 
+function setSecurityHeaders(res) {
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self)');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+}
+
+function requestOriginAllowed(req) {
+  const origin = String(req.headers.origin || '');
+  if (!origin) return true;
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const protocol = forwardedProto || (req.socket.encrypted ? 'https' : 'http');
+  const sameOrigin = `${protocol}://${req.headers.host}`;
+  return origin === sameOrigin || (ALLOWED_ORIGIN && origin === ALLOWED_ORIGIN);
+}
 function sendJson(res, statusCode, payload) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
   });
@@ -220,41 +264,61 @@ function getContentType(filePath) {
   }
 }
 
-function serveStatic(req, res) {
-  let requestedPath = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
-  if (requestedPath === '/') requestedPath = '/index.html';
+const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
+const PUBLIC_FILES = new Set([
+  '/index.html', '/style.css', '/script.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
+  '/admin.html', '/admin.css', '/admin.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html',
+  '/pexels-arturo-eg-22214041-6628962.jpg', '/pexels-warrecreates-32233887.jpg'
+]);
+const PUBLIC_PREFIXES = ['/assets/', '/icons/'];
 
-  const safePath = path.normalize(requestedPath).replace(/^([.][.]([/\\]|$))+/, '');
-  const fullPath = path.join(ROOT, safePath);
-
-  if (!fullPath.startsWith(ROOT)) {
-    sendJson(res, 403, { message: 'Forbidden' });
-    return;
-  }
-
-  fs.stat(fullPath, (err, stats) => {
-    if (err || !stats.isFile()) {
-      if (req.method === 'GET' && requestedPath === '/admin') {
-        res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'admin.html')) });
-        fs.createReadStream(path.join(ROOT, 'admin.html')).pipe(res);
-        return;
-      }
-      const appRoutes = new Set(['/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
-      if (req.method === 'GET' && appRoutes.has(requestedPath)) {
-        res.writeHead(200, { 'Content-Type': getContentType(path.join(ROOT, 'index.html')) });
-        fs.createReadStream(path.join(ROOT, 'index.html')).pipe(res);
-        return;
-      }
-      sendJson(res, 404, { message: 'File not found' });
-      return;
-    }
-
-    res.writeHead(200, { 'Content-Type': getContentType(fullPath) });
-    fs.createReadStream(fullPath).pipe(res);
-  });
+function serveFile(res, filePath, cacheControl = 'no-store') {
+  res.setHeader('Content-Type', getContentType(filePath));
+  res.setHeader('Cache-Control', cacheControl);
+  res.statusCode = 200;
+  fs.createReadStream(filePath).pipe(res);
 }
 
+function serveStatic(req, res) {
+  let requestedPath;
+  try {
+    requestedPath = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
+  } catch {
+    return sendJson(res, 400, { message: 'Invalid URL' });
+  }
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return sendJson(res, 405, { message: 'Method not allowed' });
+  }
+  if (APP_ROUTES.has(requestedPath)) {
+    return serveFile(res, path.join(ROOT, 'index.html'), 'no-store');
+  }
+  if (requestedPath === '/admin') {
+    return serveFile(res, path.join(ROOT, 'admin.html'), 'no-store');
+  }
+
+  const isPublic = PUBLIC_FILES.has(requestedPath) || PUBLIC_PREFIXES.some(prefix => requestedPath.startsWith(prefix));
+  if (!isPublic || requestedPath.includes('..') || requestedPath.includes('\\')) {
+    return sendJson(res, 404, { message: 'File not found' });
+  }
+
+  const relativePath = requestedPath.replace(/^\/+/, '');
+  const fullPath = path.resolve(ROOT, relativePath);
+  const rootPrefix = `${path.resolve(ROOT)}${path.sep}`;
+  if (!fullPath.startsWith(rootPrefix)) return sendJson(res, 403, { message: 'Forbidden' });
+
+  fs.stat(fullPath, (error, stats) => {
+    if (error || !stats.isFile()) return sendJson(res, 404, { message: 'File not found' });
+    const longCache = requestedPath.startsWith('/assets/') || requestedPath.startsWith('/icons/') || /\.(jpg|jpeg|png|svg|mp4)$/i.test(requestedPath);
+    serveFile(res, fullPath, longCache ? 'public, max-age=604800' : 'public, max-age=3600');
+  });
+}
 const server = http.createServer((req, res) => {
+  setSecurityHeaders(res);
+  if (!requestOriginAllowed(req)) return sendJson(res, 403, { message: 'Origin not allowed' });
+  const requestOrigin = String(req.headers.origin || '');
+  if (requestOrigin) res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+  res.setHeader('Vary', 'Origin');
   if (req.method === 'OPTIONS') {
     sendJson(res, 204, {});
     return;
@@ -280,6 +344,10 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'POST' && ['/api/register', '/api/login'].includes(reqUrl.pathname)) {
+    sendJson(res, 410, { message: 'Legacy login is disabled. Use secure Supabase authentication.' });
+    return;
+  }
   if (req.method === 'POST' && reqUrl.pathname === '/api/register') {
     readBody(req, async (error, data) => {
       try {
@@ -360,8 +428,9 @@ const server = http.createServer((req, res) => {
         const name = String(data.name || '').trim();
         const phone = String(data.phone || '').trim();
         const plan = String(data.plan || '').trim();
-        if (!name || !phone || !plan) {
-          sendJson(res, 400, { message: 'Please enter your name, phone, and plan.' });
+        const allowedPlans = new Set(['Drop-In', 'Standard', 'All-In']);
+        if (!name || name.length > 80 || !/^[0-9+() -]{7,20}$/.test(phone) || !allowedPlans.has(plan)) {
+          sendJson(res, 400, { message: 'Please enter valid booking details.' });
           return;
         }
 
@@ -395,8 +464,9 @@ const server = http.createServer((req, res) => {
         const name = String(data.name || '').trim();
         const email = String(data.email || '').trim();
         const message = String(data.message || '').trim();
-        if (!name || !email || !message) {
-          sendJson(res, 400, { message: 'Please complete all contact fields.' });
+        const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!name || name.length > 80 || !validEmail || email.length > 320 || !message || message.length > 2000) {
+          sendJson(res, 400, { message: 'Please enter valid contact details.' });
           return;
         }
 
