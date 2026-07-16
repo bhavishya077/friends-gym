@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const root = document.documentElement;
-  const apiBase = window.location.protocol === 'file:' ? 'http://localhost:3000' : '';
+  const isNativeApp = Boolean(window.Capacitor?.isNativePlatform?.());
+  const liveApiBase = 'https://friends-gym.onrender.com';
+  const apiBase = isNativeApp ? liveApiBase : (window.location.protocol === 'file:' ? liveApiBase : '');
+  const nativeAuthRedirect = 'com.friendsgym.app://auth';
   const toggle = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.nav-links');
   const themeToggle = document.getElementById('theme-toggle');
@@ -151,6 +154,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return supabaseClient;
   };
 
+  if (isNativeApp && window.Capacitor?.Plugins?.App) {
+    window.Capacitor.Plugins.App.addListener('appUrlOpen', async ({ url }) => {
+      if (!url?.startsWith(nativeAuthRedirect)) return;
+      const callbackUrl = new URL(url);
+      const authParams = new URLSearchParams(callbackUrl.hash.slice(1));
+      const accessToken = authParams.get('access_token');
+      const refreshToken = authParams.get('refresh_token');
+      const client = await getSupabaseClient();
+      if (!client || !accessToken || !refreshToken) return;
+      const { data, error } = await client.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+      if (!error && data.session?.user) {
+        await window.Capacitor.Plugins.Browser?.close();
+        await loadMemberDashboard(data.session.user, { redirect: true });
+        showAuthToast();
+      }
+    });
+  }
+
   if (googleAuthButton) {
     googleAuthButton.addEventListener('click', async () => {
       const client = await getSupabaseClient();
@@ -161,14 +185,18 @@ document.addEventListener('DOMContentLoaded', () => {
           showAuthToast('Already signed in. Logout before using another account.');
           return;
         }
-        const { error } = await client.auth.signInWithOAuth({
+        const { data, error } = await client.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin,
+            redirectTo: isNativeApp ? nativeAuthRedirect : window.location.origin,
+            skipBrowserRedirect: isNativeApp,
             queryParams: { prompt: 'select_account' }
           }
         });
         if (error) showAuthToast('Google sign-in start nahi ho saka. Dobara try karein.');
+        if (isNativeApp && data?.url) {
+          await window.Capacitor.Plugins.Browser?.open({ url: data.url });
+        }
         return;
       }
       showAuthToast('Google sign-in abhi setup nahi hai. Email/password se sign in karein.');
@@ -850,6 +878,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const accountNav = document.getElementById('nav-auth');
   const adminDashboardLink = document.getElementById('admin-dashboard-link');
   const profileAdminLink = document.getElementById('profile-admin-link');
+  if (isNativeApp) {
+    if (installButton) installButton.hidden = true;
+    [adminDashboardLink, profileAdminLink].forEach((link) => {
+      link?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        await window.Capacitor.Plugins.Browser?.open({ url: `${liveApiBase}/admin` });
+      });
+    });
+  }
   const profileLogout = document.getElementById('profile-logout');
   const profileText = (id, value) => {
     const element = document.getElementById(id);
@@ -1006,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
               password,
               options: {
                 data: { full_name: name },
-                emailRedirectTo: `${window.location.origin}/auth`
+                emailRedirectTo: isNativeApp ? nativeAuthRedirect : `${window.location.origin}/auth`
               }
             });
             if (error) throw error;

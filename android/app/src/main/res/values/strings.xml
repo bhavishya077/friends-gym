@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Friends Gym</string>
+    <string name="title_activity_main">Friends Gym</string>
+    <string name="package_name">com.friendsgym.app</string>
+    <string name="custom_url_scheme">com.friendsgym.app</string>
+</resources>

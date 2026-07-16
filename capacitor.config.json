@@ -1,0 +1,8 @@
+{
+  "appId": "com.friendsgym.app",
+  "appName": "Friends Gym",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": false
+  }
+}

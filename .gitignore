@@ -1,6 +1,7 @@
 .env
 data/
 node_modules/
+www/
 users.json
 bookings.json
 messages.json

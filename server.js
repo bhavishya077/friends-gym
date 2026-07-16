@@ -233,6 +233,7 @@ function setSecurityHeaders(res) {
 function requestOriginAllowed(req) {
   const origin = String(req.headers.origin || '');
   if (!origin) return true;
+  if (origin === 'http://localhost' || origin === 'capacitor://localhost') return true;
   const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const protocol = forwardedProto || (req.socket.encrypted ? 'https' : 'http');
   const sameOrigin = `${protocol}://${req.headers.host}`;
