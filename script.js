@@ -467,7 +467,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const workoutHistoryKey = () => `friends-gym-workouts-v3:${activeActivityOwner}`;
   const sessionHistoryKey = () => `friends-gym-sessions-v3:${activeActivityOwner}`;
   const trainerDoneKey = () => `friends-gym-trainer-done-v2:${activeActivityOwner}`;
+  const activityDirtyKey = () => `friends-gym-activity-dirty-v1:${activeActivityOwner}`;
+  const readDirtyActivityDates = () => {
+    try { return new Set(JSON.parse(localStorage.getItem(activityDirtyKey()) || '[]')); }
+    catch { return new Set(); }
+  };
+  const writeDirtyActivityDates = (dates) => localStorage.setItem(activityDirtyKey(), JSON.stringify([...dates]));
   let reloadTrainerForOwner = () => {};
+  let persistActivityDayToCloud = async () => false;
+  let syncActivityCloud = async () => false;
   const workoutHistory = readHistory(workoutHistoryKey());
   const sessionHistory = readHistory(sessionHistoryKey());
   let selectedWorkoutDate = new Date();
@@ -570,6 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const completed = [...workoutBoxes].filter((box) => box.checked).map((box) => box.value);
     workoutHistory[selectedWorkoutKey] = completed;
     localStorage.setItem(workoutHistoryKey(), JSON.stringify(workoutHistory));
+    persistActivityDayToCloud(selectedWorkoutKey);
     loadTrackerForDate();
     renderCalendar();
   };
@@ -611,10 +620,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ], { duration: 220, easing: 'ease-out' });
   };
 
-  const calculateCalories = (steps, minutes, workout, intensity) => {
-    const workoutRates = { strength: 5.8, cardio: 8.2, hiit: 10.5, mobility: 3.2 };
-    const intensityRates = { light: 0.82, moderate: 1, hard: 1.22 };
-    return Math.max(0, Math.round(minutes * workoutRates[workout] * intensityRates[intensity] + steps * 0.045));
+  const calculateCalories = (minutes, workout, intensity, weight = 70) => {
+    const metRates = { strength: 5, cardio: 7, hiit: 9, mobility: 3 };
+    const intensityRates = { light: 0.72, moderate: 1, hard: 1.28 };
+    const safeMinutes = Math.max(0, Number(minutes) || 0);
+    const safeWeight = Math.min(350, Math.max(20, Number(weight) || 70));
+    const met = metRates[workout] || metRates.strength;
+    const multiplier = intensityRates[intensity] || intensityRates.moderate;
+    return Math.max(0, Math.round(met * multiplier * 3.5 * safeWeight / 200 * safeMinutes));
   };
 
   const updateSessionDashboard = (session) => {
@@ -694,10 +707,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const workout = sessionWorkout.value;
       const intensity = sessionIntensity.value;
       const distanceKm = steps * 0.000762;
-      const calories = calculateCalories(steps, minutes, workout, intensity);
-      const session = { steps, minutes, workout, intensity, distanceKm, calories, date: selectedWorkoutKey, savedAt: new Date().toISOString() };
+      const weight = Math.min(350, Math.max(20, Number(sessionWeight?.value || 70)));
+      const calories = calculateCalories(minutes, workout, intensity, weight);
+      const session = { steps, minutes, workout, intensity, weight, distanceKm, calories, source: autoTracking ? 'sensor' : 'manual', date: selectedWorkoutKey, savedAt: new Date().toISOString() };
       sessionHistory[selectedWorkoutKey] = session;
       localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
+      persistActivityDayToCloud(selectedWorkoutKey);
       updateLocalActivityTotals();
       updateSessionDashboard(session);
       renderCalendar();
@@ -711,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionStartedAt = null;
       delete sessionHistory[selectedWorkoutKey];
       localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
+      persistActivityDayToCloud(selectedWorkoutKey);
       if (sessionForm) sessionForm.reset();
       if (liveSessionTime) liveSessionTime.textContent = '00:00';
       if (sessionCalories) sessionCalories.textContent = '0';
@@ -741,6 +757,106 @@ document.addEventListener('DOMContentLoaded', () => {
     loadSelectedDate();
     if (typeof updateLocalActivityTotals === 'function') updateLocalActivityTotals();
     reloadTrainerForOwner();
+  };
+  const cloudActivityRow = (key, memberId = verifiedSessionUser?.id) => {
+    const completed = Array.isArray(workoutHistory[key]) ? workoutHistory[key] : [];
+    const session = sessionHistory[key] || null;
+    return {
+      member_id: memberId,
+      activity_date: key,
+      completed_items: completed,
+      steps: session ? Math.max(0, Math.round(Number(session.steps) || 0)) : null,
+      minutes: session ? Math.max(0, Number(session.minutes) || 0) : null,
+      workout_type: session?.workout || null,
+      intensity: session?.intensity || null,
+      weight_kg: session?.weight ? Number(session.weight) : null,
+      distance_km: session ? Math.max(0, Number(session.distanceKm) || 0) : null,
+      calories: session ? Math.max(0, Math.round(Number(session.calories) || 0)) : null,
+      tracking_source: session?.source || 'manual'
+    };
+  };
+
+  persistActivityDayToCloud = async (key) => {
+    const dirtyDates = readDirtyActivityDates();
+    dirtyDates.add(key);
+    writeDirtyActivityDates(dirtyDates);
+    const memberId = verifiedSessionUser?.id;
+    const client = await getSupabaseClient();
+    if (!memberId || !client) return false;
+    const completed = workoutHistory[key] || [];
+    const session = sessionHistory[key] || null;
+    let error = null;
+    if (!completed.length && !session) {
+      ({ error } = await client.from('activity_days').delete().eq('member_id', memberId).eq('activity_date', key));
+    } else {
+      ({ error } = await client.from('activity_days').upsert(cloudActivityRow(key, memberId), {
+        onConflict: 'member_id,activity_date'
+      }));
+    }
+    if (!error) {
+      dirtyDates.delete(key);
+      writeDirtyActivityDates(dirtyDates);
+    }
+    return !error;
+  };
+
+  syncActivityCloud = async (memberId) => {
+    const syncStatus = document.getElementById('profile-sync-status');
+    const client = await getSupabaseClient();
+    if (!client || !memberId) {
+      if (syncStatus) syncStatus.textContent = 'Saved on this device';
+      return false;
+    }
+    for (const dirtyDate of readDirtyActivityDates()) {
+      await persistActivityDayToCloud(dirtyDate);
+    }
+    const { data, error } = await client.from('activity_days')
+      .select('activity_date,completed_items,steps,minutes,workout_type,intensity,weight_kg,distance_km,calories,tracking_source,updated_at')
+      .eq('member_id', memberId)
+      .order('activity_date', { ascending: true });
+    if (error) {
+      if (syncStatus) syncStatus.textContent = 'Saved locally - cloud setup pending';
+      return false;
+    }
+
+    const remoteDates = new Set();
+    (data || []).forEach((row) => {
+      const key = row.activity_date;
+      remoteDates.add(key);
+      workoutHistory[key] = Array.isArray(row.completed_items) ? row.completed_items : [];
+      if (row.calories == null) {
+        delete sessionHistory[key];
+      } else {
+        sessionHistory[key] = {
+          steps: Number(row.steps) || 0,
+          minutes: Number(row.minutes) || 0,
+          workout: row.workout_type || 'strength',
+          intensity: row.intensity || 'moderate',
+          weight: Number(row.weight_kg) || 70,
+          distanceKm: Number(row.distance_km) || 0,
+          calories: Number(row.calories) || 0,
+          source: row.tracking_source || 'manual',
+          date: key,
+          savedAt: row.updated_at
+        };
+      }
+    });
+
+    const localDates = new Set([...Object.keys(workoutHistory), ...Object.keys(sessionHistory)]);
+    const missingRows = [...localDates]
+      .filter((key) => !remoteDates.has(key))
+      .map((key) => cloudActivityRow(key, memberId));
+    if (missingRows.length) {
+      await client.from('activity_days').upsert(missingRows, { onConflict: 'member_id,activity_date' });
+    }
+
+    localStorage.setItem(workoutHistoryKey(), JSON.stringify(workoutHistory));
+    localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
+    renderCalendar();
+    loadSelectedDate();
+    updateLocalActivityTotals();
+    if (syncStatus) syncStatus.textContent = 'Cloud sync active';
+    return true;
   };
   const dietForm = document.getElementById('diet-form');
   const dietResult = document.getElementById('diet-result');
@@ -960,6 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateMembership(membershipResult.data || null);
       }
     }
+    await syncActivityCloud(user.id);
     if (accountNav) accountNav.dataset.screen = 'profile';
     if (redirect || window.location.pathname === '/auth') showScreen('home');
   };
@@ -1200,9 +1317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weight = Math.max(30,Number(sessionWeight?.value||70));
     const intensity = autoIntensityFromMotion();
     setAutoIntensity(intensity);
-    const metBase = {strength:5.0,cardio:7.0,hiit:9.0,mobility:3.0}[sessionWorkout?.value||'strength'];
-    const multiplier = {light:.72,moderate:1,hard:1.28}[intensity];
-    const calories = Math.max(0,Math.round(metBase*multiplier*3.5*weight/200*minutesExact));
+        const calories = calculateCalories(minutesExact, sessionWorkout?.value || 'strength', intensity, weight);
     const distanceKm = steps*.000762;
     if(sessionRowSteps) sessionRowSteps.textContent=steps.toLocaleString();
     if(sessionRowTime) sessionRowTime.textContent=`${Math.floor(minutesExact)}m`;
