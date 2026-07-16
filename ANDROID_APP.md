@@ -4,6 +4,12 @@ This repository now contains a Capacitor Android application with package ID
 `com.friendsgym.app`. It bundles the frontend inside the APK and connects to the
 live Friends Gym API and Supabase backend.
 
+The test APK uses the hosted HTTPS app inside its native full-screen shell. Web
+content, styling, text, Supabase queries, and ordinary JavaScript feature changes
+therefore update automatically after deployment without reinstalling the APK.
+Changes to native plugins, Android permissions, app icons, or the Capacitor
+configuration still require a new APK.
+
 ## Download the test APK
 
 Every Android-related push to `main` runs the `Build Android APK` GitHub Action.

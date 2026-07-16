@@ -1,8 +1,15 @@
 {
-  "appId": "com.friendsgym.app",
-  "appName": "Friends Gym",
-  "webDir": "www",
-  "android": {
-    "allowMixedContent": false
-  }
+    "appId":  "com.friendsgym.app",
+    "appName":  "Friends Gym",
+    "webDir":  "www",
+    "android":  {
+                    "allowMixedContent":  false
+                },
+    "server":  {
+                   "url":  "https://friends-gym.onrender.com",
+                   "cleartext":  false,
+                   "allowNavigation":  [
+                                           "friends-gym.onrender.com"
+                                       ]
+               }
 }
