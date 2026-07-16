@@ -3740,3 +3740,5 @@ body.dark-app-body {
 
 /* v33: secure authentication state */
 .auth-security-note{margin:10px 0 2px;padding:10px 12px;border:1px solid rgba(69,212,155,.2);border-radius:12px;background:rgba(69,212,155,.07);color:var(--muted);font-size:9px;line-height:1.5}.auth-security-note::before{content:'SECURE SESSION';display:block;margin-bottom:3px;color:#45d49b;font-size:8px;font-weight:800;letter-spacing:.11em}
+
+[hidden] { display: none !important; }
