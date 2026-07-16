@@ -266,7 +266,7 @@ function getContentType(filePath) {
 
 const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/style.css', '/script.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
+  '/index.html', '/style.css', '/script.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
   '/admin.html', '/admin.css', '/admin.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html',
   '/pexels-arturo-eg-22214041-6628962.jpg', '/pexels-warrecreates-32233887.jpg'
 ]);
