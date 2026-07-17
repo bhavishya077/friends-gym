@@ -98,7 +98,7 @@ class HealthConnectPlugin : Plugin() {
     @PluginMethod
     fun openSettings(call: PluginCall) {
         try {
-            activity.startActivity(Intent(HealthConnectClient.getHealthConnectSettingsAction()))
+            activity.startActivity(Intent(HealthConnectClient.ACTION_HEALTH_CONNECT_SETTINGS))
             call.resolve()
         } catch (error: Exception) {
             call.reject("Could not open Health Connect settings", error)
