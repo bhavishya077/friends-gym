@@ -709,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const distanceKm = steps * 0.000762;
       const weight = Math.min(350, Math.max(20, Number(sessionWeight?.value || 70)));
       const calories = calculateCalories(minutes, workout, intensity, weight);
-      const session = { steps, minutes, workout, intensity, weight, distanceKm, calories, source: autoTracking ? 'sensor' : 'manual', date: selectedWorkoutKey, savedAt: new Date().toISOString() };
+      const session = { steps, minutes, workout, intensity, weight, distanceKm, calories, source: healthConnectActive ? 'health-connect' : (autoTracking ? 'sensor' : 'manual'), date: selectedWorkoutKey, savedAt: new Date().toISOString() };
       sessionHistory[selectedWorkoutKey] = session;
       localStorage.setItem(sessionHistoryKey(), JSON.stringify(sessionHistory));
       persistActivityDayToCloud(selectedWorkoutKey);
@@ -1291,8 +1291,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let autoLastStepAt = 0;
   let autoStepTimes = [];
   let autoMotionSamples = [];
+  let healthConnectActive = false;
+  let healthConnectInterval = null;
+  let healthLastSteps = null;
+  let healthLastReadAt = null;
+  let healthCadence = 0;
 
   const autoIntensityFromMotion = () => {
+    if (healthConnectActive) {
+      if (healthCadence >= 115) return 'hard';
+      if (healthCadence >= 65) return 'moderate';
+      return 'light';
+    }
     const now = Date.now();
     autoStepTimes = autoStepTimes.filter(time => now - time < 30000);
     const cadence = autoStepTimes.length * 2;
@@ -1327,17 +1337,66 @@ document.addEventListener('DOMContentLoaded', () => {
     if(dashboardSteps) dashboardSteps.textContent=steps.toLocaleString();
     if(dashboardCalories) dashboardCalories.textContent=`${calories} kcal`;
     if(dashboardTime) dashboardTime.textContent=`${Math.floor(minutesExact)} min`;
-    if(autoTrackerStatus) autoTrackerStatus.textContent=`Tracking - ${intensity} - ${autoStepTimes.length*2} steps/min - calorie estimate`;
+    if(autoTrackerStatus) autoTrackerStatus.textContent=`Tracking - ${intensity} - ${autoStepTimes.length*2} steps/min -  - calorie estimate`;
   };
   const stopAutoTracking = (message='Paused - tap Enable & Start to continue') => {
     autoTracking=false;
     if(autoMotionHandler) window.removeEventListener('devicemotion',autoMotionHandler);
     autoMotionHandler=null; clearInterval(autoLiveInterval); autoLiveInterval=null;
+    clearInterval(healthConnectInterval); healthConnectInterval=null; healthConnectActive=false;
     autoTrackerPanel?.classList.remove('tracking');
     if(autoTrackerStart) autoTrackerStart.textContent='Enable & Start';
     if(autoTrackerStatus) autoTrackerStatus.textContent=message;
   };
+  const readHealthConnectSteps = async () => {
+    const plugin = window.Capacitor?.Plugins?.HealthConnect;
+    if (!plugin) throw new Error('Health Connect plugin unavailable');
+    const result = await plugin.readTodaySteps();
+    const steps = Math.max(0, Number(result?.steps || 0));
+    const now = Date.now();
+    if (healthLastSteps != null && healthLastReadAt && steps >= healthLastSteps) {
+      healthCadence = Math.round((steps - healthLastSteps) * 60000 / Math.max(1000, now - healthLastReadAt));
+    }
+    healthLastSteps = steps;
+    healthLastReadAt = now;
+    if (sessionSteps) sessionSteps.value = String(steps);
+    updateAutoLiveStats();
+  };
+  const beginHealthConnectTracking = async () => {
+    const plugin = window.Capacitor?.Plugins?.HealthConnect;
+    if (!plugin) return false;
+    try {
+      if (autoTrackerStatus) autoTrackerStatus.textContent = 'Checking Health Connect...';
+      const availability = await plugin.status();
+      if (availability?.status !== 'available') {
+        if (autoTrackerStatus) autoTrackerStatus.textContent = availability?.status === 'update-required' ? 'Install or update Health Connect, then try again' : 'Health Connect is unavailable on this phone';
+        return true;
+      }
+      const permission = await plugin.requestStepsPermission();
+      if (!permission?.granted) {
+        if (autoTrackerStatus) autoTrackerStatus.textContent = 'Steps access not allowed - enable it in Health Connect settings';
+        return true;
+      }
+      if (!sessionStartedAt) startSession?.click();
+      autoTracking = true;
+      healthConnectActive = true;
+      healthLastSteps = null;
+      healthLastReadAt = null;
+      healthCadence = 0;
+      await readHealthConnectSteps();
+      healthConnectInterval = setInterval(() => readHealthConnectSteps().catch(() => {}), 15000);
+      autoLiveInterval = setInterval(updateAutoLiveStats, 1000);
+      autoTrackerPanel?.classList.add('tracking');
+      if (autoTrackerStart) autoTrackerStart.textContent = 'Pause tracking';
+      if (autoTrackerStatus) autoTrackerStatus.textContent = 'Health Connect linked - today steps are live';
+      return true;
+    } catch (error) {
+      if (autoTrackerStatus) autoTrackerStatus.textContent = 'Health Connect could not start - use manual mode';
+      return true;
+    }
+  };
   const beginAutoTracking = async () => {
+    if (isNativeApp && await beginHealthConnectTracking()) return;
     if(!('DeviceMotionEvent' in window)){ if(autoTrackerStatus)autoTrackerStatus.textContent='Motion sensor unavailable - use manual fields'; return; }
     try {
       if(typeof DeviceMotionEvent.requestPermission==='function'){
@@ -1361,4 +1420,9 @@ document.addEventListener('DOMContentLoaded', () => {
   stopSession?.addEventListener('click',()=>stopAutoTracking('Workout stopped - values ready to save'));
   resetSession?.addEventListener('click',()=>{stopAutoTracking('Ready - keep app open during workout');if(sessionWeight)sessionWeight.value=localStorage.getItem('friends-gym-weight')||'70';});
   sessionWeight?.addEventListener('change',()=>localStorage.setItem('friends-gym-weight',sessionWeight.value));
-  if(sessionWeight)sessionWeight.value=localStorage.getItem('friends-gym-weight')||sessionWeight.value||'70';});
+  if(sessionWeight)sessionWeight.value=localStorage.getItem('friends-gym-weight')||sessionWeight.value||'70';
+  if (isNativeApp && window.Capacitor?.Plugins?.HealthConnect && autoTrackerStart) {
+    autoTrackerStart.textContent = 'Connect Health';
+    if (autoTrackerStatus) autoTrackerStatus.textContent = 'Connect Health Connect for real daily steps';
+  }
+});
