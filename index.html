@@ -13,9 +13,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=39" />
-    <script src="supabase.min.js?v=39"></script>
-    <script src="supabase-config.js?v=39"></script>
+    <link rel="stylesheet" href="style.css?v=40" />
+    <script src="supabase.min.js?v=40"></script>
+    <script src="supabase-config.js?v=40"></script>
   </head>
   <body class="dark-app-body">
 
@@ -107,10 +107,11 @@
 
         <section class="screen" id="membership" data-route="/membership" data-title="Membership">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>MEMBERSHIP</h1><div class="avatar">FG</div></div>
-          <div class="plan-card"><h5>DROP-IN</h5><div class="plan-price">Rs 399 <span>/session</span></div><ul><li>Single class access</li><li>No commitment</li><li>Trainer guidance</li></ul><button class="btn-choose" type="button" data-screen="contact" data-plan="Drop-In">Choose</button></div>
-          <div class="plan-card featured"><span class="plan-badge">Popular</span><h5>STANDARD</h5><div class="plan-price">Rs 5999 <span>/6 month</span></div><ul><li>Strength and cardio access</li><li>BMI and calorie calculator</li><li>Session dashboard</li></ul><button class="btn-choose" type="button" data-screen="contact" data-plan="Standard">Choose</button></div>
-          <div class="plan-card"><h5>ALL-IN</h5><div class="plan-price">Rs 9999 <span>/12 month</span></div><ul><li>Personal training support</li><li>Diet planning tools</li><li>Priority callback</li></ul><button class="btn-choose" type="button" data-screen="contact" data-plan="All-In">Choose</button></div>
-        </section>
+          <div class="plan-card"><h5>DROP-IN</h5><div class="plan-price">Rs 399 <span>/session</span></div><ul><li>Single class access</li><li>No commitment</li><li>Trainer guidance</li></ul><button class="btn-choose" type="button" data-payment-plan="drop_in">Pay Rs 399</button></div>
+          <div class="plan-card featured"><span class="plan-badge">Popular</span><h5>STANDARD</h5><div class="plan-price">Rs 5999 <span>/6 month</span></div><ul><li>Strength and cardio access</li><li>BMI and calorie calculator</li><li>Session dashboard</li></ul><button class="btn-choose" type="button" data-payment-plan="standard">Pay Rs 5,999</button></div>
+          <div class="plan-card"><h5>ALL-IN</h5><div class="plan-price">Rs 9999 <span>/12 month</span></div><ul><li>Personal training support</li><li>Diet planning tools</li><li>Priority callback</li></ul><button class="btn-choose" type="button" data-payment-plan="all_in">Pay Rs 9,999</button></div>
+                  <div id="payment-status" class="result-box payment-status" role="status" aria-live="polite">Sign in, choose a plan and complete a secure test payment.</div>
+</section>
 
         <section class="screen" id="tools" data-route="/tools" data-title="Tools">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>TOOLS</h1><div class="avatar">FG</div></div>
@@ -160,6 +161,7 @@
       </nav>
     </div>
     <p class="caption">Friends Gym dark app. Move page to page like a mobile app.</p>
-    <script src="script.js?v=39"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="script.js?v=40"></script>
   </body>
 </html>

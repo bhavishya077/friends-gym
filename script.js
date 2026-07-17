@@ -1221,6 +1221,85 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const paymentStatus = document.getElementById('payment-status');
+  const paymentButtons = [...document.querySelectorAll('[data-payment-plan]')];
+  const setPaymentBusy = (busy) => paymentButtons.forEach((button) => { button.disabled = busy; });
+  const paymentRequest = async (endpoint, payload, accessToken) => {
+    const response = await fetch(`${apiBase}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Payment request failed.');
+    return data;
+  };
+  const beginMembershipPayment = async (planCode) => {
+    if (!paymentStatus) return;
+    setPaymentBusy(true);
+    let checkoutOpened = false;
+    try {
+      const client = await getSupabaseClient();
+      const { data: sessionData } = client ? await client.auth.getSession() : { data: {} };
+      const session = sessionData?.session;
+      if (!session?.access_token || !session.user) {
+        paymentStatus.textContent = 'Please sign in first. Opening secure login...';
+        setTimeout(() => showScreen('auth'), 500);
+        return;
+      }
+      if (typeof window.Razorpay !== 'function') throw new Error('Secure checkout could not load. Check your internet and try again.');
+      paymentStatus.textContent = 'Creating a secure test order...';
+      const checkoutData = await paymentRequest('/api/payments/order', { planCode }, session.access_token);
+      const user = session.user;
+      const checkout = new window.Razorpay({
+        key: checkoutData.keyId,
+        amount: checkoutData.order.amount,
+        currency: checkoutData.order.currency,
+        name: 'Friends Gym',
+        description: `${checkoutData.plan.name} membership`,
+        order_id: checkoutData.order.id,
+        prefill: {
+          name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+          email: user.email || ''
+        },
+        theme: { color: '#ff4d2e' },
+        retry: { enabled: false },
+        handler: async (response) => {
+          setPaymentBusy(true);
+          paymentStatus.textContent = 'Payment received. Verifying securely...';
+          try {
+            const verified = await paymentRequest('/api/payments/verify', response, session.access_token);
+            paymentStatus.textContent = verified.message;
+            await loadMemberDashboard(user);
+            setTimeout(() => showScreen('profile'), 900);
+          } catch (verificationError) {
+            paymentStatus.textContent = verificationError.message;
+          } finally {
+            setPaymentBusy(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            paymentStatus.textContent = 'Payment cancelled. No membership was activated.';
+            setPaymentBusy(false);
+          }
+        }
+      });
+      checkout.on('payment.failed', (response) => {
+        paymentStatus.textContent = response?.error?.description || 'Test payment failed. Membership was not activated.';
+        setPaymentBusy(false);
+      });
+      paymentStatus.textContent = 'Secure Razorpay checkout opened.';
+      checkout.open();
+      checkoutOpened = true;
+    } catch (error) {
+      paymentStatus.textContent = error.message || 'Payment could not be started.';
+    } finally {
+      if (!checkoutOpened) setPaymentBusy(false);
+    }
+  };
+  paymentButtons.forEach((button) => button.addEventListener('click', () => beginMembershipPayment(button.dataset.paymentPlan)));
+
   document.querySelectorAll('[data-plan]').forEach((button) => {
     button.addEventListener('click', () => {
       const planSelect = document.getElementById('booking-plan');

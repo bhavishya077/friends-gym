@@ -42,3 +42,13 @@ Passwords are stored with Node's `scrypt` hashing. Admin APIs require `ADMIN_TOK
 Set `SMTP_EMAIL`, `SMTP_PASSWORD`, and `OWNER_EMAIL` to receive booking and contact alerts by email. For Gmail, use a Google App Password, not your normal Gmail password. Optional Telegram alerts still work with `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
 
 See `PLAY_STORE_DEPLOYMENT.md` for the publishing checklist.
+
+
+## Razorpay Test Payments
+
+1. Run `supabase/payment-integration.sql` in the Supabase SQL Editor.
+2. Add `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_ID`, and `RAZORPAY_KEY_SECRET` as secret server environment variables.
+3. Use Razorpay Test Mode keys until the entire flow has been verified.
+4. Enable automatic payment capture in Razorpay. Membership activation occurs only after server-side signature verification and a captured payment status check.
+
+Never place the Razorpay key secret or Supabase service-role key in browser code, Git, or the APK.

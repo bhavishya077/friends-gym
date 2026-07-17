@@ -120,7 +120,7 @@ function isRateLimited(req) {
       if (!times.some(time => now - time < 60000)) rateLimits.delete(entryKey);
     }
   }
-  const sensitiveWrite = req.method === 'POST' && ['/api/bookings', '/api/contact'].includes(new URL(req.url, 'http://localhost').pathname);
+  const sensitiveWrite = req.method === 'POST' && ['/api/bookings', '/api/contact', '/api/payments/order', '/api/payments/verify'].includes(new URL(req.url, 'http://localhost').pathname);
   return recent.length > (sensitiveWrite ? 10 : 30);
 }
 
@@ -129,6 +129,74 @@ function isAdmin(req) {
   const supplied = Buffer.from(String(req.headers.authorization || ''));
   const expected = Buffer.from(`Bearer ${ADMIN_TOKEN}`);
   return supplied.length === expected.length && crypto.timingSafeEqual(supplied, expected);
+}
+
+const RAZORPAY_KEY_ID = String(process.env.RAZORPAY_KEY_ID || '').trim();
+const RAZORPAY_KEY_SECRET = String(process.env.RAZORPAY_KEY_SECRET || '').trim();
+const SUPABASE_URL = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
+const SUPABASE_ANON_KEY = String(process.env.SUPABASE_ANON_KEY || '').trim();
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+const MEMBERSHIP_PLANS = Object.freeze({
+  drop_in: { code: 'drop_in', name: 'Drop-In', amountPaise: 39900, durationDays: 1 },
+  standard: { code: 'standard', name: 'Standard', amountPaise: 599900, durationDays: 183 },
+  all_in: { code: 'all_in', name: 'All-In', amountPaise: 999900, durationDays: 365 }
+});
+
+function paymentEnvironmentReady() {
+  return Boolean(RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET && SUPABASE_URL && SUPABASE_ANON_KEY && SUPABASE_SERVICE_ROLE_KEY);
+}
+
+async function authenticateSupabaseUser(req) {
+  const authorization = String(req.headers.authorization || '');
+  if (!authorization.startsWith('Bearer ') || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: authorization }
+  });
+  if (!response.ok) return null;
+  const user = await response.json();
+  return user?.id ? user : null;
+}
+
+async function razorpayRequest(endpoint, options = {}) {
+  const authorization = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64');
+  const response = await fetch(`https://api.razorpay.com/v1${endpoint}`, {
+    ...options,
+    headers: { Authorization: `Basic ${authorization}`, 'Content-Type': 'application/json', ...(options.headers || {}) }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data?.error?.description || 'Payment provider request failed.');
+    error.statusCode = response.status;
+    throw error;
+  }
+  return data;
+}
+
+async function supabaseServiceRequest(pathname, options = {}) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1${pathname}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const error = new Error(data?.message || data?.hint || 'Secure payment storage failed.');
+    error.statusCode = response.status;
+    throw error;
+  }
+  return data;
+}
+
+function signaturesMatch(orderId, paymentId, suppliedSignature) {
+  const expected = crypto.createHmac('sha256', RAZORPAY_KEY_SECRET).update(`${orderId}|${paymentId}`).digest('hex');
+  const supplied = Buffer.from(String(suppliedSignature || ''), 'utf8');
+  const calculated = Buffer.from(expected, 'utf8');
+  return supplied.length === calculated.length && crypto.timingSafeEqual(supplied, calculated);
 }
 
 async function sendOwnerEmail(subject, text) {
@@ -221,13 +289,13 @@ function readBody(req, callback) {
 }
 
 function setSecurityHeaders(res) {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://*.razorpay.com; frame-src https://api.razorpay.com https://*.razorpay.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), accelerometer=(self), gyroscope=(self)');
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 }
 
 function requestOriginAllowed(req) {
@@ -268,7 +336,7 @@ function getContentType(filePath) {
 const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
 const PUBLIC_FILES = new Set([
   '/index.html', '/style.css', '/script.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
-  '/admin.html', '/admin.css', '/admin.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html',
+  '/admin.html', '/admin.css', '/admin.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html', '/privacy.html',
   '/pexels-arturo-eg-22214041-6628962.jpg', '/pexels-warrecreates-32233887.jpg'
 ]);
 const PUBLIC_PREFIXES = ['/assets/', '/icons/'];
@@ -342,6 +410,105 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'GET' && reqUrl.pathname === '/api/health') {
     sendJson(res, 200, { status: 'ok', service: 'friends-gym' });
+    return;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/payments/order') {
+    readBody(req, async (error, data) => {
+      try {
+        if (error) throw error;
+        if (!paymentEnvironmentReady()) return sendJson(res, 503, { message: 'Test payments are not configured yet.' });
+        const user = await authenticateSupabaseUser(req);
+        if (!user) return sendJson(res, 401, { message: 'Please sign in before choosing a membership.' });
+        const plan = MEMBERSHIP_PLANS[String(data.planCode || '')];
+        if (!plan) return sendJson(res, 400, { message: 'Please choose a valid membership plan.' });
+
+        const order = await razorpayRequest('/orders', {
+          method: 'POST',
+          body: JSON.stringify({
+            amount: plan.amountPaise,
+            currency: 'INR',
+            receipt: `fg_${Date.now()}_${user.id.slice(0, 8)}`,
+            notes: { member_id: user.id, plan_code: plan.code }
+          })
+        });
+        await supabaseServiceRequest('/payment_transactions', {
+          method: 'POST',
+          body: JSON.stringify({
+            member_id: user.id,
+            plan_code: plan.code,
+            plan_name: plan.name,
+            duration_days: plan.durationDays,
+            amount_paise: plan.amountPaise,
+            currency: 'INR',
+            razorpay_order_id: order.id,
+            status: 'created'
+          })
+        });
+        logActivity(`PAYMENT_ORDER ${order.id} ${user.id} ${plan.code}`);
+        sendJson(res, 201, {
+          keyId: RAZORPAY_KEY_ID,
+          order: { id: order.id, amount: plan.amountPaise, currency: 'INR' },
+          plan: { code: plan.code, name: plan.name, amountInr: plan.amountPaise / 100 }
+        });
+      } catch (paymentError) {
+        logActivity(`PAYMENT_ORDER_FAILED ${paymentError.message}`);
+        sendJson(res, paymentError.statusCode >= 400 && paymentError.statusCode < 500 ? 400 : 502, { message: 'Payment could not be started. Please try again.' });
+      }
+    });
+    return;
+  }
+
+  if (req.method === 'POST' && reqUrl.pathname === '/api/payments/verify') {
+    readBody(req, async (error, data) => {
+      try {
+        if (error) throw error;
+        if (!paymentEnvironmentReady()) return sendJson(res, 503, { message: 'Test payments are not configured yet.' });
+        const user = await authenticateSupabaseUser(req);
+        if (!user) return sendJson(res, 401, { message: 'Your login session expired. Sign in and try again.' });
+        const orderId = String(data.razorpay_order_id || '');
+        const paymentId = String(data.razorpay_payment_id || '');
+        const signature = String(data.razorpay_signature || '');
+        if (!/^order_[A-Za-z0-9]+$/.test(orderId) || !/^pay_[A-Za-z0-9]+$/.test(paymentId) || !/^[a-f0-9]{64}$/i.test(signature)) {
+          return sendJson(res, 400, { message: 'Invalid payment response.' });
+        }
+
+        const query = `/payment_transactions?razorpay_order_id=eq.${encodeURIComponent(orderId)}&member_id=eq.${encodeURIComponent(user.id)}&select=*`;
+        const rows = await supabaseServiceRequest(query, { method: 'GET' });
+        const transaction = Array.isArray(rows) ? rows[0] : null;
+        if (!transaction) return sendJson(res, 404, { message: 'Payment order was not found for this account.' });
+        if (transaction.status === 'paid' && transaction.razorpay_payment_id === paymentId) {
+          return sendJson(res, 200, { message: 'Payment already verified.', membershipActive: true });
+        }
+        if (!signaturesMatch(transaction.razorpay_order_id, paymentId, signature)) {
+          logActivity(`PAYMENT_SIGNATURE_REJECTED ${orderId} ${user.id}`);
+          return sendJson(res, 400, { message: 'Payment verification failed. Membership was not activated.' });
+        }
+
+        const payment = await razorpayRequest(`/payments/${encodeURIComponent(paymentId)}`);
+        const validPayment = payment.order_id === transaction.razorpay_order_id
+          && Number(payment.amount) === Number(transaction.amount_paise)
+          && payment.currency === transaction.currency;
+        if (!validPayment) return sendJson(res, 400, { message: 'Payment details did not match the membership order.' });
+        if (payment.status !== 'captured') {
+          return sendJson(res, 409, { message: 'Payment is not captured yet. Enable automatic capture in Razorpay and refresh shortly.' });
+        }
+
+        const memberships = await supabaseServiceRequest('/rpc/complete_razorpay_payment', {
+          method: 'POST',
+          body: JSON.stringify({ target_order_id: orderId, target_payment_id: paymentId })
+        });
+        logActivity(`PAYMENT_VERIFIED ${paymentId} ${user.id} ${transaction.plan_code}`);
+        sendJson(res, 200, {
+          message: `${transaction.plan_name} membership activated successfully.`,
+          membershipActive: true,
+          membership: Array.isArray(memberships) ? memberships[0] : memberships
+        });
+      } catch (paymentError) {
+        logActivity(`PAYMENT_VERIFY_FAILED ${paymentError.message}`);
+        sendJson(res, 502, { message: 'Payment verification is temporarily unavailable. No duplicate charge was created.' });
+      }
+    });
     return;
   }
 
