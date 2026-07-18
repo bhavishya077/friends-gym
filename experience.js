@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
       streak += 1;
     }
     setText('profile-streak', streak);
-    setText('profile-streak-metric', streak);
     setText('profile-week-workouts', thisWeek);
     const chart = $('profile-chart');
     if (chart) chart.innerHTML = days.map((day) => `<div class="${day.minutes ? '' : 'zero'}" style="--h:${Math.max(8, Math.round(day.minutes / maxMinutes * 100))}%" title="${day.minutes} minutes"><span>${day.label}</span></div>`).join('');
