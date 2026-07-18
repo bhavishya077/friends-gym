@@ -8,22 +8,50 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=2" />
+  <link rel="stylesheet" href="admin.css?v=4" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=23"></script>
 </head>
 <body>
   <main class="admin-shell">
-    <header><a href="/" aria-label="Back to app">‹</a><div><span>FRIENDS GYM</span><h1>Admin Dashboard</h1></div><div class="owner-badge">AD</div></header>
-    <section id="admin-locked" class="card locked"><div class="lock-icon">🔒</div><h2>Owner access required</h2><p>Gym owner account se sign in karke members, plans aur attendance manage karein.</p><a class="primary" href="/auth">Sign in</a></section>
+    <header><a href="/" aria-label="Back to app">&larr;</a><div><span>FRIENDS GYM</span><h1>Admin Dashboard</h1></div><div class="owner-badge">AD</div></header>
+    <section id="admin-locked" class="card locked"><div class="lock-icon">LOCK</div><h2>Owner access required</h2><p>Gym owner account se sign in karke members, plans, classes aur attendance manage karein.</p><a class="primary" href="/auth">Sign in</a></section>
     <div id="admin-panel" hidden>
-      <section class="summary"><article><span>Members</span><strong id="member-total">0</strong></article><article><span>Active plans</span><strong id="active-total">0</strong></article><article><span>Today</span><strong id="today-total">0</strong></article></section>
-      <section class="card"><div class="section-title"><div><span>DIRECTORY</span><h2>Members</h2></div><button id="refresh" type="button">Refresh</button></div><input id="member-search" type="search" placeholder="Search member name or phone" /><div id="member-list" class="records"><p class="empty">Loading members...</p></div></section>
-      <section class="card"><div class="section-title"><div><span>MEMBERSHIP</span><h2>Assign plan</h2></div></div><form id="membership-form"><select id="membership-member" required><option value="">Select member</option></select><div class="grid"><select id="plan" required><option>Standard</option><option>All-In</option><option>Drop-In</option></select><select id="status" required><option value="active">Active</option><option value="pending">Pending</option><option value="paused">Paused</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option></select></div><div class="grid"><label>Start date<input id="starts" type="date" required /></label><label>Expiry date<input id="expires" type="date" required /></label></div><input id="amount" type="number" min="0" step="1" placeholder="Amount paid (INR)" required /><button class="primary" type="submit">Save membership</button></form></section>
-      <section class="card"><div class="section-title"><div><span>ATTENDANCE</span><h2>Manual check-in</h2></div></div><form id="attendance-form"><select id="attendance-member" required><option value="">Select member</option></select><button class="primary" type="submit">Check in now</button></form><div id="attendance-list" class="records"></div></section>
-      <p id="message" class="message" role="status">Connected securely to Supabase.</p>
+      <section class="summary"><article><span>Members</span><strong id="member-total">0</strong></article><article><span>Active plans</span><strong id="active-total">0</strong></article><article><span>Today</span><strong id="today-total">0</strong></article><article><span>Upcoming</span><strong id="class-total">0</strong></article></section>
+
+      <section class="card class-manager">
+        <div class="section-title"><div><span>LIVE SCHEDULE</span><h2 id="class-form-heading">Create class</h2></div><button id="reset-class" type="button">Clear</button></div>
+        <form id="class-form">
+          <input id="class-id" type="hidden" />
+          <div class="grid"><label>Class title<input id="class-title" required minlength="3" maxlength="80" placeholder="Boxing Fundamentals" /></label><label>Trainer<input id="class-trainer" required minlength="2" maxlength="80" placeholder="Coach Riya" /></label></div>
+          <div class="grid thirds"><label>Category<select id="class-category"><option>Fitness</option><option>Strength</option><option>Combat</option><option>Cardio</option><option>Recovery</option><option>Yoga</option></select></label><label>Level<select id="class-level"><option>All levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label><label>Date &amp; time<input id="class-start" type="datetime-local" required /></label></div>
+          <div class="grid"><label>Duration (minutes)<input id="class-duration" type="number" min="10" max="240" value="45" required /></label><label>Capacity<input id="class-capacity" type="number" min="1" max="500" value="20" required /></label></div>
+          <label>Description<textarea id="class-description" maxlength="240" rows="3" placeholder="What members will do in this session"></textarea></label>
+          <label class="toggle-row"><input id="class-active" type="checkbox" checked /><span>Visible and open for booking</span></label>
+          <button id="save-class" class="primary" type="submit">Publish class</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="section-title"><div><span>CLASSES</span><h2>Manage schedule</h2></div><button id="refresh-classes" type="button">Refresh</button></div>
+        <div class="schedule-tools"><select id="class-filter"><option value="upcoming">Upcoming</option><option value="all">All classes</option><option value="past">Past</option><option value="cancelled">Cancelled</option></select></div>
+        <div id="admin-class-list" class="class-records"><p class="empty">Loading classes...</p></div>
+      </section>
+
+      <section id="roster-card" class="card" hidden>
+        <div class="section-title"><div><span>CLASS ROSTER</span><h2 id="roster-title">Bookings</h2></div><button id="close-roster" type="button">Close</button></div>
+        <p class="helper">Present, absent ya booked status yahin se update karein.</p>
+        <div id="class-roster" class="records"><p class="empty">Select a class to view members.</p></div>
+      </section>
+
+      <div class="admin-grid">
+        <section class="card"><div class="section-title"><div><span>DIRECTORY</span><h2>Members</h2></div><button id="refresh" type="button">Refresh</button></div><input id="member-search" type="search" placeholder="Search member name or phone" /><div id="member-list" class="records"><p class="empty">Loading members...</p></div></section>
+        <section class="card"><div class="section-title"><div><span>MEMBERSHIP</span><h2>Assign plan</h2></div></div><form id="membership-form"><select id="membership-member" required><option value="">Select member</option></select><div class="grid"><select id="plan" required><option>Standard</option><option>All-In</option><option>Drop-In</option></select><select id="status" required><option value="active">Active</option><option value="pending">Pending</option><option value="paused">Paused</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option></select></div><div class="grid"><label>Start date<input id="starts" type="date" required /></label><label>Expiry date<input id="expires" type="date" required /></label></div><input id="amount" type="number" min="0" step="1" placeholder="Amount paid (INR)" required /><button class="primary" type="submit">Save membership</button></form></section>
+        <section class="card"><div class="section-title"><div><span>GYM ATTENDANCE</span><h2>Manual check-in</h2></div></div><form id="attendance-form"><select id="attendance-member" required><option value="">Select member</option></select><button class="primary" type="submit">Check in now</button></form><div id="attendance-list" class="records"></div></section>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite">Connected securely to Supabase.</p>
     </div>
   </main>
-  <script src="admin.js?v=2"></script>
+  <script src="admin.js?v=4"></script>
 </body>
 </html>

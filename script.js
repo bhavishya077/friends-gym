@@ -1297,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const booked = Number(item.booked_count || 0);
       const capacity = Math.max(1, Number(item.capacity || 1));
       const seats = Math.max(0, capacity - booked);
-      const isBooked = item.user_booking_status === 'booked';
+      const isBooked = ['booked', 'attended'].includes(item.user_booking_status);
       const isFull = seats === 0 && !isBooked;
       const categoryClass = String(item.category || 'fitness').toLowerCase().replace(/[^a-z0-9_-]/g, '');
       return `<article class="class-card live-class-card ${isBooked ? 'is-booked' : ''}">
