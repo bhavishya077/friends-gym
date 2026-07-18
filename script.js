@@ -1003,7 +1003,7 @@ document.addEventListener('DOMContentLoaded', () => {
     [adminDashboardLink, profileAdminLink].forEach((link) => {
       link?.addEventListener('click', async (event) => {
         event.preventDefault();
-        await window.Capacitor.Plugins.Browser?.open({ url: `${liveApiBase}/admin` });
+        window.location.assign(`${liveApiBase}/admin`);
       });
     });
   }

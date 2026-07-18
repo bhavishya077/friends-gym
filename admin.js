@@ -252,7 +252,19 @@
     const { data: { session } } = await client.auth.getSession();
     if (!session?.user) return;
     const { data, error } = await client.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
-    if (error || data?.role !== 'admin') return;
+    if (error) {
+      locked.querySelector('h2').textContent = 'Account verification failed';
+      locked.querySelector('p').textContent = error.message || 'Please return to the app and try again.';
+      return;
+    }
+    if (data?.role !== 'admin') {
+      locked.querySelector('h2').textContent = 'Admin access required';
+      locked.querySelector('p').textContent = `You are signed in as ${session.user.email || 'a member'}, but this account does not have the admin role.`;
+      const action = locked.querySelector('a.primary');
+      action.textContent = 'Back to app';
+      action.href = '/';
+      return;
+    }
     locked.hidden = true;
     panel.hidden = false;
     await load();
