@@ -6,6 +6,7 @@ const files = [
   'style.css',
   'premium-theme.css',
   'experience.css',
+  'reference-ui.css',
   'script.js',
   'experience.js',
   'qrcode.js',

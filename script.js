@@ -672,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sessionRowSteps = document.getElementById('session-row-steps');
   const sessionRowCalories = document.getElementById('session-row-calories');
   const sessionRowTime = document.getElementById('session-row-time');
+  const sessionRowIntensity = document.getElementById('session-row-intensity');
   const startSession = document.getElementById('start-session');
   const stopSession = document.getElementById('stop-session');
   const resetSession = document.getElementById('reset-session');
@@ -1659,6 +1660,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const setAutoIntensity = (intensity) => {
     if (sessionIntensity) sessionIntensity.value = intensity;
+    if (sessionRowIntensity) sessionRowIntensity.textContent = intensity.charAt(0).toUpperCase() + intensity.slice(1);
     document.querySelectorAll('[data-segmented="session-intensity"] .segment').forEach(button => {
       const active = button.dataset.value === intensity;
       button.classList.toggle('active', active);

@@ -1,10 +1,11 @@
-const CACHE_NAME = 'friends-gym-v51';
+const CACHE_NAME = 'friends-gym-v52';
 const APP_SHELL = [
   '/',
   '/index.html',
   '/style.css',
   '/premium-theme.css',
   '/experience.css',
+  '/reference-ui.css',
   '/script.js',
   '/experience.js',
   '/qrcode.js',

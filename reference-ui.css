@@ -1,0 +1,338 @@
+/* Exact visual alignment for the selected premium-green mobile references. */
+:root {
+  --ref-bg: #071116;
+  --ref-panel: #0d181d;
+  --ref-panel-2: #101d22;
+  --ref-line: rgba(124, 171, 151, .19);
+  --ref-green: #55d894;
+  --ref-green-dark: #1f8f5b;
+  --ref-copy: #f4f8f5;
+  --ref-muted: #8e9e97;
+}
+
+html, body { background: #050a0d !important; }
+body.dark-app-body {
+  color: var(--ref-copy);
+  background: radial-gradient(circle at 50% 0, rgba(62, 146, 105, .12), transparent 28rem), #050a0d !important;
+}
+.phone {
+  width: min(100%, 430px) !important;
+  max-width: 430px !important;
+  background: var(--ref-bg) !important;
+  box-shadow: 0 0 60px rgba(0, 0, 0, .58) !important;
+}
+.screen {
+  padding: 15px 14px 92px !important;
+  background: linear-gradient(180deg, #091419 0%, #061015 100%) !important;
+}
+.screen.active { animation: reference-enter .22s ease both; }
+@keyframes reference-enter { from { opacity: 0; transform: translateY(4px); } }
+
+.topbar, .premium-header {
+  grid-template-columns: 38px 1fr 38px !important;
+  min-height: 42px !important;
+  gap: 8px !important;
+  margin: 0 0 12px !important;
+}
+.topbar h1, .premium-header h1 {
+  font-size: 14px !important;
+  line-height: 1 !important;
+  letter-spacing: .14em !important;
+}
+.icon-btn, .topbar .avatar, .premium-header .avatar, .premium-icon {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  border-radius: 50% !important;
+  border-color: var(--ref-line) !important;
+  background: rgba(12, 23, 28, .84) !important;
+}
+.card, .ring-card, .plan-card, .profile-plan-card, .member-identity-card, .member-id-card,
+.result-box, .trainer-card, .session-card, .admin-dashboard, .experience-card,
+.goal-card, .member-code-card {
+  border-color: var(--ref-line) !important;
+  border-radius: 12px !important;
+  background: linear-gradient(145deg, #0f1b20, #0a1418) !important;
+}
+.section-head { margin: 16px 1px 9px !important; }
+.section-head h4 { font-size: 12px !important; letter-spacing: .05em !important; }
+.section-head p, .section-head span { font-size: 8px !important; }
+.btn, .btn-primary, .btn-choose, button.primary {
+  min-height: 40px !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+}
+input, select, textarea, .auth-input {
+  min-height: 44px !important;
+  border-radius: 8px !important;
+  background: #081216 !important;
+}
+
+/* Reference home */
+.home-screen { padding-top: 0 !important; }
+.home-screen .premium-header {
+  position: absolute;
+  z-index: 8;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  display: grid !important;
+  grid-template-columns: 1fr 36px !important;
+}
+.home-screen .premium-header > div { display: none !important; }
+.home-screen #app-menu-button {
+  width: max-content !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: 0 !important;
+}
+.home-screen #app-menu-button span { display: none; }
+.home-screen #app-menu-button::after {
+  content: "FRIENDS  GYM";
+  color: #edf7f1;
+  font: 800 13px/1 Manrope, sans-serif;
+  letter-spacing: .12em;
+}
+.home-screen #app-menu-button::before {
+  content: "";
+  width: 19px;
+  height: 19px;
+  margin-right: 8px;
+  border: 1px solid var(--ref-green);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 5px rgba(85, 216, 148, .11);
+}
+.home-screen .premium-header .avatar { grid-column: 2; font-size: 0 !important; }
+.home-screen .premium-header .avatar::after { content: "\2662"; color: var(--ref-green); font-size: 17px; }
+.home-hero {
+  min-height: 440px !important;
+  height: 52dvh;
+  max-height: 510px;
+  margin: 0 -14px !important;
+  padding: 96px 18px 26px !important;
+  align-items: flex-start !important;
+  border-bottom: 0 !important;
+}
+.home-hero video { opacity: .78 !important; object-position: 58% center; }
+.home-hero::after {
+  background: linear-gradient(90deg, rgba(4, 10, 13, .95) 0%, rgba(4, 10, 13, .52) 42%, rgba(4, 10, 13, .05) 75%),
+    linear-gradient(180deg, rgba(4, 10, 13, .08) 52%, #071116 100%) !important;
+}
+.home-hero-copy { width: 47% !important; margin-top: 5px; }
+.home-hero-copy span { color: var(--ref-muted) !important; font-size: 8px !important; letter-spacing: .08em !important; }
+.home-hero-copy h2 {
+  margin: 5px 0 6px !important;
+  font: 700 21px/1.12 Manrope, sans-serif !important;
+  letter-spacing: -.03em !important;
+}
+.home-hero-copy p { max-width: 135px; color: #c7d2cc !important; font-size: 9px !important; line-height: 1.45 !important; }
+.home-hero-copy .btn { display: none !important; }
+.home-screen .home-metrics { margin-top: -5px !important; position: relative; z-index: 3; }
+.home-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 6px !important; }
+.home-metric {
+  min-height: 112px;
+  padding: 9px 3px !important;
+  border-color: var(--ref-line) !important;
+  border-radius: 10px !important;
+  background: #0c171c !important;
+}
+.home-metric i {
+  width: 58px !important;
+  height: 58px !important;
+  margin-bottom: 7px !important;
+  border: 3px solid rgba(85, 216, 148, .24) !important;
+  box-shadow: inset 0 0 0 2px rgba(85, 216, 148, .08);
+  color: var(--ref-green) !important;
+}
+.home-metric strong { margin-top: -43px; margin-bottom: 23px; font-size: 14px !important; }
+.home-metric span { font-size: 6px !important; letter-spacing: .04em; }
+.home-membership {
+  min-height: 72px;
+  margin-top: 9px !important;
+  padding: 10px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(110deg, rgba(36, 120, 77, .58), rgba(8, 22, 18, .95)) !important;
+}
+.home-membership .crown { width: 43px !important; height: 43px !important; border-radius: 9px !important; }
+.home-membership strong { font-size: 13px !important; }
+.home-screen .recommended-workout {
+  min-height: 104px;
+  grid-template-columns: 112px 1fr !important;
+  margin-top: 9px !important;
+  border-radius: 10px !important;
+}
+.recommended-workout video { min-height: 104px !important; }
+.recommended-copy { padding: 11px !important; }
+.recommended-copy h3 { margin: 3px 0 !important; font-size: 13px !important; }
+.recommended-copy p { margin-bottom: 6px !important; font-size: 8px !important; }
+.recommended-copy .btn { min-height: 30px !important; width: auto; padding: 0 12px; }
+.premium-shortcuts { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+.premium-shortcuts button { min-height: 58px !important; border-radius: 9px !important; }
+
+/* Reference workout */
+.activity-stats { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 5px !important; padding: 7px !important; border-radius: 10px !important; }
+.activity-stats .stat-row { padding: 9px 3px !important; border-radius: 7px !important; }
+.activity-stats .stat-icon { width: 27px !important; height: 27px !important; }
+.activity-stats .value b { font-size: 13px !important; }
+.activity-stats .value span { font-size: 6px !important; }
+.trainer-card { display: flex !important; flex-direction: column; padding: 10px !important; }
+.trainer-card .trainer-kicker { order: 0; }
+.trainer-card > .section-head { order: 1; margin-top: 5px !important; }
+.trainer-stage { order: 2; min-height: 260px !important; border-radius: 10px !important; }
+.trainer-media, .trainer-media video { min-height: 260px !important; height: 260px !important; }
+.trainer-info { padding: 54px 13px 12px !important; }
+.trainer-info h3 { font-size: 16px !important; }
+.trainer-picker { order: 3; margin-top: 8px; padding-bottom: 2px !important; }
+.trainer-chip { min-width: 66px !important; padding: 8px !important; border-radius: 8px !important; font-size: 8px !important; }
+.trainer-prescription { order: 4; margin: 8px 0 !important; }
+.trainer-prescription div { padding: 7px !important; border-radius: 8px !important; }
+.trainer-prescription strong { font-size: 14px !important; }
+.trainer-search { order: 5; }
+.trainer-steps { order: 6; }
+.trainer-safety { order: 7; }
+.trainer-actions { order: 8; }
+.session-card { padding: 13px !important; }
+
+/* Reference nutrition */
+.nutrition-summary { grid-template-columns: 108px 1fr !important; padding: 12px !important; border-radius: 10px !important; }
+.calorie-ring { width: 98px !important; }
+.calorie-ring strong { font-size: 20px !important; }
+.macro-grid { gap: 6px !important; margin: 7px 0 !important; }
+.macro-card { padding: 10px 5px !important; border-radius: 9px !important; }
+.macro-card strong { font-size: 15px !important; }
+.water-card { padding: 10px !important; border-radius: 9px !important; }
+.nutrition-log-card, .diet-planner-card { margin-top: 9px; padding: 12px !important; }
+.meal-card { border-radius: 9px !important; }
+
+/* Reference classes */
+.class-week { margin-bottom: 8px !important; padding: 7px !important; border-radius: 9px !important; }
+.class-week span { padding: 5px 1px !important; border-radius: 50% !important; }
+.featured-class {
+  min-height: 188px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  margin-bottom: 9px;
+  padding: 13px;
+  border: 1px solid var(--ref-line);
+  border-radius: 10px;
+  background: url('pexels-warrecreates-32233887.jpg') center 30% / cover;
+}
+.featured-class::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 28%, rgba(3, 10, 13, .94)); }
+.featured-class > div { position: relative; z-index: 1; width: 100%; }
+.featured-class span { color: var(--ref-green); font-size: 7px; font-weight: 900; letter-spacing: .12em; }
+.featured-class h2 { margin: 3px 0; font-size: 18px; }
+.featured-class p { margin: 0; color: #c5d0ca; font-size: 8px; }
+.class-filters { margin-bottom: 8px !important; }
+.class-filter { min-height: 30px !important; padding: 0 10px !important; font-size: 8px !important; }
+.class-schedule { display: grid; gap: 6px; }
+.live-class-card { padding: 10px 10px 10px 92px !important; min-height: 91px; border-radius: 9px !important; background: linear-gradient(90deg, rgba(16, 35, 40, .7), #0b161a) !important; }
+.live-class-card::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 82px; background: url('pexels-arturo-eg-22214041-6628962.jpg') center / cover; opacity: .82; }
+.live-class-card h5 { margin: 4px 0 !important; font-size: 11px !important; }
+.live-class-card p { display: none; }
+.class-meta { gap: 5px !important; font-size: 7px !important; }
+.class-seat-row { margin-top: 6px !important; }
+.class-book-button { min-height: 29px !important; border-radius: 6px !important; font-size: 7px !important; }
+
+/* Reference membership */
+.current-member-card { padding: 11px !important; border-radius: 10px !important; margin-bottom: 8px !important; }
+.current-member-card .member-emblem { width: 46px !important; height: 46px !important; border-radius: 10px !important; }
+.experience-card { padding: 12px !important; margin-top: 8px !important; }
+.billing-toggle { margin-bottom: 8px !important; padding: 3px !important; }
+.membership-plans { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 5px !important; }
+.plan-card { min-width: 0; padding: 10px 7px !important; border-radius: 9px !important; }
+.plan-card h5 { margin: 0 0 4px !important; font-size: 10px !important; }
+.plan-price { font-size: 14px !important; white-space: nowrap; }
+.plan-price span { display: block; font-size: 6px !important; }
+.plan-card ul { min-height: 105px; margin: 8px 0 !important; padding-left: 12px !important; }
+.plan-card li { margin-bottom: 4px; font-size: 6px !important; }
+.plan-badge { top: -8px !important; font-size: 6px !important; }
+.plan-card .btn-choose { min-height: 31px !important; padding: 3px !important; font-size: 7px !important; }
+.payment-trust { padding: 8px !important; font-size: 7px !important; }
+
+/* Reference tools */
+.tools-intro { margin: -5px 0 10px !important; font-size: 8px !important; }
+.tool-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
+.tool-tile { min-height: 100px !important; padding: 9px !important; border-radius: 9px !important; text-align: center !important; }
+.tool-tile i { width: 30px !important; height: 30px !important; margin: auto; border-radius: 7px !important; font-size: 8px; }
+.tool-tile strong { margin-top: 7px !important; font-size: 9px !important; }
+.tool-tile span { font-size: 6px !important; }
+.tool-panel { padding: 12px !important; border-radius: 9px !important; }
+
+/* Reference profile */
+#profile.active { display: flex; flex-direction: column; }
+#profile .topbar { order: 0; }
+#profile .member-identity-card { order: 1; }
+#profile .profile-metrics { order: 2; }
+#profile .profile-section-head { order: 3; }
+#profile .profile-chart { order: 4; }
+#profile .goal-card { order: 5; }
+#profile .experience-stats { order: 6; }
+#profile .profile-plan-card { order: 7; }
+#profile .member-code-card { order: 8; }
+#profile .experience-card { order: 9; }
+#profile > .btn, #profile > a { order: 10; }
+.member-identity-card { grid-template-columns: 64px 1fr auto !important; padding: 10px !important; border: 0 !important; background: transparent !important; }
+.member-avatar {
+  width: 62px !important;
+  height: 62px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(rgba(4, 10, 12, .1), rgba(4, 10, 12, .1)), url('pexels-arturo-eg-22214041-6628962.jpg') center / cover !important;
+  color: transparent !important;
+}
+.member-identity-card h2 { font-size: 18px !important; }
+.member-role { border-radius: 7px !important; }
+.profile-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 5px !important; margin: 6px 0 10px !important; }
+.profile-metrics > div { padding: 10px 2px !important; border-radius: 8px !important; }
+.profile-metrics strong { font-size: 14px !important; }
+.profile-metrics span, .profile-metrics small { font-size: 6px !important; }
+.profile-section-head { margin-top: 10px !important; }
+.profile-chart { height: 132px !important; padding: 13px 10px 17px !important; border-radius: 9px !important; }
+.goal-card, .member-code-card { margin-top: 8px !important; padding: 10px !important; }
+
+/* Reference auth/contact */
+#auth .topbar { position: absolute; z-index: 5; left: 14px; right: 14px; top: 14px; }
+.auth-wrap { margin: -15px -14px 0 !important; padding: 272px 15px 24px !important; }
+.auth-wrap::before { height: 330px !important; }
+.auth-wrap h2 { font-size: 23px !important; }
+.auth-tabs { border-radius: 9px !important; }
+.auth-tab, .google-btn, .auth-input, .auth-form .btn-primary { min-height: 43px !important; border-radius: 7px !important; }
+.contact-hero { min-height: 180px !important; border-radius: 10px !important; }
+.contact-hero h2 { font-size: 22px !important; }
+.contact-quick { gap: 5px !important; }
+.contact-quick a, .contact-quick button { min-height: 61px !important; border-radius: 8px !important; }
+.contact-details { border-radius: 9px !important; }
+
+/* Reference bottom navigation */
+.bottom-nav {
+  bottom: 0 !important;
+  width: min(100%, 430px) !important;
+  height: 72px !important;
+  padding: 6px 14px max(6px, env(safe-area-inset-bottom)) !important;
+  border-width: 1px 0 0 !important;
+  border-radius: 0 !important;
+  background: rgba(8, 18, 22, .98) !important;
+  box-shadow: 0 -12px 35px rgba(0, 0, 0, .32) !important;
+}
+.nav-icon span { font-size: 6px !important; }
+.fab { width: 52px !important; height: 52px !important; margin-top: -12px !important; }
+
+@media (min-width: 760px) {
+  .phone { margin: 16px auto !important; min-height: calc(100dvh - 32px) !important; border-radius: 22px !important; }
+  .screen { min-height: calc(100dvh - 32px); }
+  .bottom-nav { bottom: 16px !important; border: 1px solid var(--ref-line) !important; border-radius: 0 0 22px 22px !important; }
+}
+@media (max-width: 390px) {
+  .screen { padding-inline: 11px !important; }
+  .home-hero, .auth-wrap { margin-inline: -11px !important; }
+  .home-metric i { width: 50px !important; height: 50px !important; }
+  .home-metric strong { margin-top: -39px; margin-bottom: 22px; font-size: 12px !important; }
+  .membership-plans { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .member-identity-card { grid-template-columns: 58px 1fr !important; }
+  .member-role { grid-column: 2; }
+}
