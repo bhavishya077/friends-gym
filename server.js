@@ -333,9 +333,9 @@ function getContentType(filePath) {
   }
 }
 
-const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/contact']);
+const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/settings', '/contact']);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/style.css', '/premium-theme.css', '/script.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
+  '/index.html', '/style.css', '/premium-theme.css', '/experience.css', '/script.js', '/experience.js', '/qrcode.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
   '/admin.html', '/admin.css', '/admin.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html', '/privacy.html',
   '/pexels-arturo-eg-22214041-6628962.jpg', '/pexels-warrecreates-32233887.jpg'
 ]);

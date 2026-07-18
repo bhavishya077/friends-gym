@@ -8,6 +8,8 @@
   let memberships = [];
   let attendance = [];
   let classes = [];
+  let activityCount = 0;
+  let nutritionCount = 0;
   let selectedRosterClass = null;
 
   const say = (text, error = false) => {
@@ -70,6 +72,8 @@
     document.getElementById('active-total').textContent = memberships.filter((item) => item.status === 'active').length;
     document.getElementById('today-total').textContent = attendance.filter((item) => item.checked_in_at?.slice(0, 10) === today).length;
     document.getElementById('class-total').textContent = classes.filter((item) => item.active && isFuture(item)).length;
+    document.getElementById('activity-total').textContent = activityCount;
+    document.getElementById('nutrition-total').textContent = nutritionCount;
   };
 
   const render = () => {
@@ -80,11 +84,13 @@
 
   const load = async () => {
     say('Refreshing gym records...');
-    const [memberResult, membershipResult, attendanceResult, classResult] = await Promise.all([
+    const [memberResult, membershipResult, attendanceResult, classResult, activityResult, nutritionResult] = await Promise.all([
       client.from('profiles').select('id,full_name,phone,role,created_at').order('created_at', { ascending: false }),
       client.from('memberships').select('*').order('created_at', { ascending: false }),
       client.from('attendance').select('*').order('checked_in_at', { ascending: false }).limit(50),
-      client.rpc('admin_get_class_sessions')
+      client.rpc('admin_get_class_sessions'),
+      client.from('activity_days').select('*', { count: 'exact', head: true }),
+      client.from('nutrition_logs').select('*', { count: 'exact', head: true })
     ]);
     const coreError = memberResult.error || membershipResult.error || attendanceResult.error;
     if (coreError) {
@@ -95,6 +101,8 @@
     memberships = membershipResult.data || [];
     attendance = attendanceResult.data || [];
     classes = classResult.data || [];
+    activityCount = activityResult.count || 0;
+    nutritionCount = nutritionResult.count || 0;
     render();
     if (classResult.error) say('Members load ho gaye. Dynamic classes ke liye admin-classes.sql run karein.', true);
     else say('Dashboard live data ke saath up to date hai.');
@@ -231,6 +239,54 @@
     await load();
   });
 
+let qrStream = null;
+  let qrScanTimer = null;
+  const stopQrScanner = () => {
+    clearInterval(qrScanTimer);
+    qrScanTimer = null;
+    qrStream?.getTracks().forEach((track) => track.stop());
+    qrStream = null;
+    const video = document.getElementById('qr-scanner-video');
+    video.pause();
+    video.hidden = true;
+    document.getElementById('scan-member-qr').textContent = 'Scan member QR';
+  };
+  document.getElementById('scan-member-qr').addEventListener('click', async () => {
+    if (qrStream) return stopQrScanner();
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices?.getUserMedia) {
+      say('QR scanner is device par supported nahi hai. Manual check-in use karein.', true);
+      return;
+    }
+    try {
+      const detector = new BarcodeDetector({ formats: ['qr_code'] });
+      const video = document.getElementById('qr-scanner-video');
+      qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      video.srcObject = qrStream;
+      video.hidden = false;
+      await video.play();
+      document.getElementById('scan-member-qr').textContent = 'Stop scanner';
+      say('Member QR ko camera ke saamne rakhein.');
+      qrScanTimer = setInterval(async () => {
+        if (video.readyState < 2) return;
+        const codes = await detector.detect(video).catch(() => []);
+        const raw = codes[0]?.rawValue || '';
+        if (!raw.startsWith('FGCHECKIN|')) return;
+        const [, memberId, memberCode] = raw.split('|');
+        const member = members.find((item) => item.id === memberId);
+        stopQrScanner();
+        if (!member) {
+          say('Member is not available in this gym account.', true);
+          return;
+        }
+        const { error } = await client.rpc('admin_qr_checkin', { p_member_id: memberId, p_token: memberCode });
+        if (error) say(`QR check-in failed: ${error.message}. member-experience.sql setup check karein.`, true);
+        else { say(`${memberName(member)} checked in securely by QR.`); await load(); }
+      }, 650);
+    } catch (error) {
+      stopQrScanner();
+      say(error.message || 'Camera start nahi hua.', true);
+    }
+  });
   document.getElementById('attendance-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     const memberId = document.getElementById('attendance-member').value;

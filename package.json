@@ -27,7 +27,8 @@
         "@capacitor/browser": "^8.0.3",
         "@capacitor/core": "^8.4.2",
         "@capacitor/local-notifications": "8.2.0",
-        "nodemailer": "^6.9.14"
+        "nodemailer": "^6.9.14",
+        "qrcode-generator": "2.0.4"
     },
     "private": true,
     "devDependencies": {

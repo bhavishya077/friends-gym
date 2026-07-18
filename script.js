@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     '/tools': 'tools',
     '/auth': 'auth',
     '/profile': 'profile',
+    '/settings': 'settings',
     '/contact': 'contact'
   };
   const screenToRoute = Object.fromEntries(Object.entries(routeToScreen).map(([route, screen]) => [screen, route]));
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showScreen = (screenId, options = {}) => {
     const { push = true, remember = true } = options;
-    if (screenId === 'profile' && !verifiedSessionUser) screenId = 'auth';
+    if (['profile', 'settings'].includes(screenId) && !verifiedSessionUser) screenId = 'auth';
     const target = document.getElementById(screenId);
     if (!target || !target.classList.contains('screen')) return;
     setDrawerOpen(false);
@@ -155,6 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
     supabaseClient = window.supabase.createClient(url, anonKey);
     return supabaseClient;
   };
+  window.getFriendsGymSupabaseClient = getSupabaseClient;
+  window.getFriendsGymSessionUser = () => verifiedSessionUser;
 
   if (isNativeApp && window.Capacitor?.Plugins?.App) {
     window.Capacitor.Plugins.App.addListener('appUrlOpen', async ({ url }) => {
@@ -1182,7 +1185,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     await syncActivityCloud(user.id);
     if (accountNav) accountNav.dataset.screen = 'profile';
+    const signedInRoute = routeToScreen[window.location.pathname];
     if (redirect || window.location.pathname === '/auth') showScreen('home');
+    else if (['profile', 'settings'].includes(signedInRoute)) showScreen(signedInRoute, { push: false, remember: false });
   };
   const logoutMember = async () => {
     const client = await getSupabaseClient();
@@ -1595,17 +1600,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let trainerTimer = null;
     let trainerSeconds = trainerExercises[0].rest;
     const trainerDone = new Set(JSON.parse(localStorage.getItem(trainerDoneKey()) || '[]'));
+    const trainerSearch = document.getElementById('trainer-search');
+    const applyTrainerSearch = () => {
+      const query = String(trainerSearch?.value || '').trim().toLowerCase();
+      trainerPicker.querySelectorAll('[data-trainer-index]').forEach((button) => {
+        const exercise = trainerExercises[Number(button.dataset.trainerIndex)];
+        button.hidden = Boolean(query) && !`${exercise.name} ${exercise.muscle} ${exercise.short}`.toLowerCase().includes(query);
+      });
+    };
     const trainerClock = document.getElementById('trainer-rest-clock');
     const trainerComplete = document.getElementById('trainer-complete');
     const trainerRestButton = document.getElementById('trainer-rest-start');
     const renderTrainerClock = () => { trainerClock.textContent = `00:${String(trainerSeconds).padStart(2,'0')}`; };
     const renderTrainer = () => {
       const item = trainerExercises[trainerActive];
-      trainerPicker.innerHTML = trainerExercises.map((exercise,index) => `<button class="trainer-chip ${index===trainerActive?'active':''} ${trainerDone.has(exercise.id)?'done':''}" type="button" data-trainer-index="${index}">${exercise.short}</button>`).join('');
+      trainerPicker.innerHTML = trainerExercises.map((exercise,index) => `<button class="trainer-chip ${index===trainerActive?'active':''} ${trainerDone.has(exercise.id)?'done':''}" type="button" data-trainer-index="${index}">${exercise.short}</button>`).join(''); applyTrainerSearch();
       const trainerVisual=document.getElementById('trainer-visual'); const trainerVideo=document.getElementById('trainer-video'); const mediaLabel=document.getElementById('trainer-media-label'); trainerVisual.textContent=item.icon; if(item.video){trainerVideo.src=item.video;trainerVideo.hidden=false;trainerVisual.hidden=true;mediaLabel.textContent='Tap video to pause';trainerVideo.play().catch(()=>{});}else{trainerVideo.pause();trainerVideo.removeAttribute('src');trainerVideo.load();trainerVideo.hidden=true;trainerVisual.hidden=false;mediaLabel.textContent='Demo coming soon';} document.getElementById('trainer-muscle').textContent=item.muscle; document.getElementById('trainer-name').textContent=item.name; document.getElementById('trainer-coaching').textContent=item.coaching; document.getElementById('trainer-sets').textContent=item.sets; document.getElementById('trainer-reps').textContent=item.reps; document.getElementById('trainer-rest').textContent=`${item.rest}s`; document.getElementById('trainer-steps').innerHTML=item.steps.map(step=>`<li>${step}</li>`).join(''); document.getElementById('trainer-progress').textContent=`${trainerDone.size}/${trainerExercises.length} done`;
       trainerComplete.textContent=trainerDone.has(item.id)?'Completed - DONE':'Mark exercise complete'; trainerComplete.classList.toggle('completed',trainerDone.has(item.id)); clearInterval(trainerTimer); trainerTimer=null; trainerSeconds=item.rest; trainerRestButton.firstChild.textContent='Start rest '; renderTrainerClock();
     };
     document.getElementById('trainer-video')?.addEventListener('click',event=>{if(event.currentTarget.paused)event.currentTarget.play().catch(()=>{});else event.currentTarget.pause();});
+    trainerSearch?.addEventListener('input', applyTrainerSearch);
     trainerPicker.addEventListener('click',event=>{const button=event.target.closest('[data-trainer-index]');if(!button)return;trainerActive=Number(button.dataset.trainerIndex);renderTrainer();});
     reloadTrainerForOwner=()=>{trainerDone.clear();JSON.parse(localStorage.getItem(trainerDoneKey())||'[]').forEach(id=>trainerDone.add(id));renderTrainer();};
     trainerComplete.addEventListener('click',()=>{const id=trainerExercises[trainerActive].id;if(trainerDone.has(id))trainerDone.delete(id);else trainerDone.add(id);localStorage.setItem(trainerDoneKey(),JSON.stringify([...trainerDone]));renderTrainer();});
@@ -1669,7 +1683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(dashboardSteps) dashboardSteps.textContent=steps.toLocaleString();
     if(dashboardCalories) dashboardCalories.textContent=`${calories} kcal`;
     if(dashboardTime) dashboardTime.textContent=`${Math.floor(minutesExact)} min`;
-    if(autoTrackerStatus) autoTrackerStatus.textContent=`Tracking - ${intensity} - ${autoStepTimes.length*2} steps/min -  - calorie estimate`;
+    if(autoTrackerStatus) autoTrackerStatus.textContent=`Tracking - ${intensity} - ${autoStepTimes.length*2} steps/min · calorie estimate`;
   };
   const stopAutoTracking = (message='Paused - tap Enable & Start to continue') => {
     autoTracking=false;
