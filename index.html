@@ -13,9 +13,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="style.css?v=40" />
-    <script src="supabase.min.js?v=40"></script>
-    <script src="supabase-config.js?v=40"></script>
+    <link rel="stylesheet" href="style.css?v=41" />
+    <script src="supabase.min.js?v=41"></script>
+    <script src="supabase-config.js?v=41"></script>
   </head>
   <body class="dark-app-body">
 
@@ -99,10 +99,10 @@
 
         <section class="screen" id="classes" data-route="/classes" data-title="Classes">
           <div class="topbar"><button class="icon-btn" type="button" data-back>Back</button><h1>CLASSES</h1><div class="avatar">FG</div></div>
-          <div class="class-card"><span class="class-tag combat">Combat</span><h5>Boxing Fundamentals</h5><p>Footwork, combinations, and pad work for all levels.</p><div class="class-meta"><span><b>45 min</b></span><span><b>Intermediate</b></span><span><b>Coach Riya</b></span></div></div>
-          <div class="class-card"><span class="class-tag strength">Strength</span><h5>Power Lifting Basics</h5><p>Barbell technique for squat, bench, and deadlift.</p><div class="class-meta"><span><b>60 min</b></span><span><b>Beginner</b></span><span><b>Coach Arjun</b></span></div></div>
-          <div class="class-card"><span class="class-tag recovery">Recovery</span><h5>Mobility & Stretch Flow</h5><p>Guided mobility session to improve range of motion.</p><div class="class-meta"><span><b>30 min</b></span><span><b>All levels</b></span><span><b>Coach Neha</b></span></div></div>
-          <button class="btn btn-primary" type="button" data-screen="contact">Book a Trial Class</button>
+          <div class="class-schedule-head"><div><span>UPCOMING</span><h3>Live Class Schedule</h3></div><button id="refresh-classes" class="class-refresh" type="button">Refresh</button></div>
+          <div id="class-schedule" class="class-schedule"><div class="class-card class-loading"><h5>Loading classes...</h5><p>Sign in to view live seats and bookings.</p></div></div>
+          <div id="class-booking-status" class="result-box" role="status" aria-live="polite">Your booking status will appear here.</div>
+          <button class="btn btn-secondary" type="button" data-screen="contact">Request a Trial Class</button>
         </section>
 
         <section class="screen" id="membership" data-route="/membership" data-title="Membership">
@@ -162,6 +162,6 @@
     </div>
     <p class="caption">Friends Gym dark app. Move page to page like a mobile app.</p>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="script.js?v=40"></script>
+    <script src="script.js?v=41"></script>
   </body>
 </html>

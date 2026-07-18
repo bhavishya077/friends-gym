@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobile = window.matchMedia('(max-width: 860px)').matches;
   let installPrompt = null;
   let verifiedSessionUser = null;
+  let refreshClassSchedule = () => {};
 
   const routeToScreen = {
     '/': 'home',
@@ -71,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.querySelectorAll('.screen').forEach((screen) => screen.classList.remove('active'));
     target.classList.add('active');
+    if (screenId === 'classes') setTimeout(() => refreshClassSchedule(), 0);
     if (remember && (!screenHistory.length || screenHistory[screenHistory.length - 1] !== screenId)) {
       screenHistory.push(screenId);
     }
@@ -935,6 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const setLoggedInUser = (user) => {
     const userName = user.name || user.email;
     verifiedSessionUser = user;
+    setTimeout(() => refreshClassSchedule(true), 0);
     localStorage.setItem('friends-gym-user', JSON.stringify(user));
     switchActivityOwner(user.id);
     if (authTitle) authTitle.textContent = `Welcome, ${userName}`;
@@ -959,6 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const resetLoggedOutUi = () => {
     verifiedSessionUser = null;
+    setTimeout(() => refreshClassSchedule(true), 0);
     localStorage.removeItem('friends-gym-user');
     switchActivityOwner('guest');
     if (authTitle) authTitle.textContent = 'Login / Register';
@@ -1220,6 +1224,80 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const classSchedule = document.getElementById('class-schedule');
+  const classBookingStatus = document.getElementById('class-booking-status');
+  const refreshClassesButton = document.getElementById('refresh-classes');
+  const escapeClassText = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const classDateLabel = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Schedule pending';
+    return date.toLocaleString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
+  const renderClassSchedule = (classes) => {
+    if (!classSchedule) return;
+    if (!classes.length) {
+      classSchedule.innerHTML = '<div class="class-card"><h5>No upcoming classes</h5><p>New sessions will appear here when the gym publishes them.</p></div>';
+      return;
+    }
+    classSchedule.innerHTML = classes.map((item) => {
+      const booked = Number(item.booked_count || 0);
+      const capacity = Math.max(1, Number(item.capacity || 1));
+      const seats = Math.max(0, capacity - booked);
+      const isBooked = item.user_booking_status === 'booked';
+      const isFull = seats === 0 && !isBooked;
+      const categoryClass = String(item.category || 'fitness').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      return `<article class="class-card live-class-card ${isBooked ? 'is-booked' : ''}">
+        <div class="class-card-top"><span class="class-tag ${categoryClass}">${escapeClassText(item.category || 'Fitness')}</span><span class="class-date">${escapeClassText(classDateLabel(item.starts_at))}</span></div>
+        <h5>${escapeClassText(item.title)}</h5>
+        <p>${escapeClassText(item.description || 'Coach-led Friends Gym class.')}</p>
+        <div class="class-meta"><span><b>${Number(item.duration_minutes) || 45} min</b></span><span><b>${escapeClassText(item.level || 'All levels')}</b></span><span><b>${escapeClassText(item.trainer_name || 'Friends Gym Coach')}</b></span></div>
+        <div class="class-seat-row"><span>${isBooked ? 'Your seat is confirmed' : `${seats} of ${capacity} seats left`}</span><button class="class-book-button ${isBooked ? 'cancel' : ''}" type="button" data-class-id="${escapeClassText(item.id)}" data-class-action="${isBooked ? 'cancel' : 'book'}" ${isFull ? 'disabled' : ''}>${isBooked ? 'Cancel booking' : (isFull ? 'Class full' : 'Book class')}</button></div>
+      </article>`;
+    }).join('');
+  };
+  refreshClassSchedule = async (quiet = false) => {
+    if (!classSchedule) return;
+    if (!verifiedSessionUser) {
+      classSchedule.innerHTML = '<div class="class-card class-login-card"><h5>Sign in to book classes</h5><p>Class seats and your bookings are protected by your member account.</p><button class="btn btn-primary" type="button" data-class-login>Open secure login</button></div>';
+      if (!quiet && classBookingStatus) classBookingStatus.textContent = 'Login is required to view live availability.';
+      return;
+    }
+    if (!quiet) classSchedule.classList.add('loading');
+    try {
+      const client = await getSupabaseClient();
+      if (!client) throw new Error('Class service is unavailable.');
+      const { data, error } = await client.rpc('get_class_schedule');
+      if (error) throw error;
+      renderClassSchedule(Array.isArray(data) ? data : []);
+      if (!quiet && classBookingStatus) classBookingStatus.textContent = 'Live seats updated just now.';
+    } catch (error) {
+      classSchedule.innerHTML = '<div class="class-card"><h5>Schedule unavailable</h5><p>Run the class booking SQL setup, then refresh this page.</p></div>';
+      if (classBookingStatus) classBookingStatus.textContent = error.message || 'Classes could not be loaded.';
+    } finally {
+      classSchedule.classList.remove('loading');
+    }
+  };
+  refreshClassesButton?.addEventListener('click', () => refreshClassSchedule());
+  classSchedule?.addEventListener('click', async (event) => {
+    const loginButton = event.target.closest('[data-class-login]');
+    if (loginButton) return showScreen('auth');
+    const button = event.target.closest('[data-class-action]');
+    if (!button || button.disabled) return;
+    button.disabled = true;
+    try {
+      const client = await getSupabaseClient();
+      const action = button.dataset.classAction;
+      const rpcName = action === 'cancel' ? 'cancel_class_booking' : 'book_class';
+      const { error } = await client.rpc(rpcName, { target_class_id: button.dataset.classId });
+      if (error) throw error;
+      if (classBookingStatus) classBookingStatus.textContent = action === 'cancel' ? 'Class booking cancelled.' : 'Class booked! Your seat is confirmed.';
+      await refreshClassSchedule(true);
+    } catch (error) {
+      if (classBookingStatus) classBookingStatus.textContent = error.message || 'Booking could not be updated.';
+      button.disabled = false;
+    }
+  });
 
   const paymentStatus = document.getElementById('payment-status');
   const paymentButtons = [...document.querySelectorAll('[data-payment-plan]')];
