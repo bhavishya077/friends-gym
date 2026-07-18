@@ -437,6 +437,70 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const toolTiles = [...document.querySelectorAll('[data-tool-target]')];
+  const toolPanels = [...document.querySelectorAll('.tool-panel')];
+  toolTiles.forEach((tile) => tile.addEventListener('click', () => {
+    toolTiles.forEach((item) => item.classList.toggle('active', item === tile));
+    toolPanels.forEach((panel) => panel.classList.toggle('active', panel.id === tile.dataset.toolTarget));
+    document.getElementById(tile.dataset.toolTarget)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
+  const bindCalculator = (formId, resultId, calculate) => {
+    const form = document.getElementById(formId);
+    const result = document.getElementById(resultId);
+    form?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      try { result.textContent = calculate(); }
+      catch (error) { result.textContent = error.message || 'Please check your values.'; }
+    });
+  };
+  bindCalculator('calorie-tool-form', 'calorie-tool-result', () => {
+    const weight = Number(document.getElementById('tool-calorie-weight').value);
+    const minutes = Number(document.getElementById('tool-calorie-minutes').value);
+    const met = Number(document.getElementById('tool-calorie-activity').value);
+    return `Estimated burn: ${Math.round(met * 3.5 * weight / 200 * minutes)} kcal. Actual burn varies by intensity and fitness level.`;
+  });
+  bindCalculator('repmax-tool-form', 'repmax-tool-result', () => {
+    const weight = Number(document.getElementById('tool-lift-weight').value);
+    const reps = Number(document.getElementById('tool-lift-reps').value);
+    return `Estimated one-rep max: ${Math.round(weight * (1 + reps / 30))} kg. Use a spotter and progress gradually.`;
+  });
+  bindCalculator('bodyfat-tool-form', 'bodyfat-tool-result', () => {
+    const bmi = Number(document.getElementById('tool-bodyfat-bmi').value);
+    const age = Number(document.getElementById('tool-bodyfat-age').value);
+    const sex = Number(document.getElementById('tool-bodyfat-sex').value);
+    const estimate = Math.max(3, Math.min(60, 1.2 * bmi + 0.23 * age - 10.8 * sex - 5.4));
+    return `Estimated body fat: ${estimate.toFixed(1)}%. This is informational only; a professional measurement is more accurate.`;
+  });
+  bindCalculator('water-tool-form', 'water-tool-result', () => {
+    const weight = Number(document.getElementById('tool-water-weight').value);
+    const minutes = Number(document.getElementById('tool-water-minutes').value);
+    const litres = weight * 0.035 + (minutes / 30) * 0.35;
+    return `Daily water goal: about ${litres.toFixed(1)} litres, adjusted for a ${minutes}-minute workout.`;
+  });
+  bindCalculator('protein-tool-form', 'protein-tool-result', () => {
+    const weight = Number(document.getElementById('tool-protein-weight').value);
+    const factor = Number(document.getElementById('tool-protein-goal').value);
+    const target = weight * factor;
+    return `Daily protein goal: ${Math.round(target * 0.9)}–${Math.round(target * 1.1)} g. Spread it across meals.`;
+  });
+  document.querySelectorAll('.billing-toggle button').forEach((button) => button.addEventListener('click', () => {
+    document.querySelectorAll('.billing-toggle button').forEach((item) => item.classList.toggle('active', item === button));
+  }));
+  document.querySelector('[data-contact-focus]')?.addEventListener('click', () => {
+    document.getElementById('contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('contact-name')?.focus({ preventScroll: true });
+  });
+  const waterButtons = [...document.querySelectorAll('#water-glasses button')];
+  waterButtons.forEach((button, index) => button.addEventListener('click', () => {
+    const count = index + 1;
+    waterButtons.forEach((item, itemIndex) => item.classList.toggle('filled', itemIndex < count));
+    const label = document.getElementById('water-label');
+    if (label) label.textContent = `${count} of 8 glasses`;
+    localStorage.setItem('friends-gym-water-glasses', String(count));
+  }));
+  const savedWater = Math.min(8, Math.max(0, Number(localStorage.getItem('friends-gym-water-glasses') || 6)));
+  waterButtons.forEach((item, index) => item.classList.toggle('filled', index < savedWater));
+  if (document.getElementById('water-label')) document.getElementById('water-label').textContent = `${savedWater} of 8 glasses`;
   const workoutBoxes = document.querySelectorAll('[data-workout]');
   const trackerStatus = document.getElementById('tracker-status');
   const workoutCalendar = document.getElementById('workout-calendar');
@@ -598,6 +662,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const dashboardSteps = document.getElementById('dashboard-steps');
   const dashboardCalories = document.getElementById('dashboard-calories');
   const dashboardTime = document.getElementById('dashboard-time');
+  const homeSteps = document.getElementById('home-steps');
+  const homeCalories = document.getElementById('home-calories');
+  const homeTime = document.getElementById('home-time');
+  const homeRecovery = document.getElementById('home-recovery');
   const sessionRowSteps = document.getElementById('session-row-steps');
   const sessionRowCalories = document.getElementById('session-row-calories');
   const sessionRowTime = document.getElementById('session-row-time');
@@ -637,6 +705,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardSteps) dashboardSteps.textContent = session.steps.toLocaleString();
     if (dashboardCalories) dashboardCalories.textContent = `${session.calories} kcal`;
     if (dashboardTime) dashboardTime.textContent = `${session.minutes} min`;
+    if (homeSteps) homeSteps.textContent = session.steps.toLocaleString();
+    if (homeCalories) homeCalories.textContent = session.calories.toLocaleString();
+    if (homeTime) homeTime.textContent = `${session.minutes}m`;
+    if (homeRecovery) homeRecovery.textContent = session.intensity === 'hard' ? 'High' : (session.intensity === 'light' ? 'Light' : 'Good');
     if (sessionRowSteps) sessionRowSteps.textContent = session.steps.toLocaleString();
     if (sessionRowCalories) sessionRowCalories.textContent = `${session.calories}`;
     if (sessionRowTime) sessionRowTime.textContent = `${session.minutes}m`;
@@ -653,6 +725,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dashboardSteps) dashboardSteps.textContent = '0';
     if (dashboardCalories) dashboardCalories.textContent = '0 kcal';
     if (dashboardTime) dashboardTime.textContent = '0 min';
+    if (homeSteps) homeSteps.textContent = '0';
+    if (homeCalories) homeCalories.textContent = '0';
+    if (homeTime) homeTime.textContent = '0m';
+    if (homeRecovery) homeRecovery.textContent = 'Ready';
     if (sessionRowSteps) sessionRowSteps.textContent = '0';
     if (sessionRowCalories) sessionRowCalories.textContent = '0';
     if (sessionRowTime) sessionRowTime.textContent = '0m';
@@ -736,6 +812,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dashboardSteps) dashboardSteps.textContent = '0';
       if (dashboardCalories) dashboardCalories.textContent = '0 kcal';
       if (dashboardTime) dashboardTime.textContent = '0 min';
+    if (homeSteps) homeSteps.textContent = '0';
+    if (homeCalories) homeCalories.textContent = '0';
+    if (homeTime) homeTime.textContent = '0m';
+    if (homeRecovery) homeRecovery.textContent = 'Ready';
       if (sessionRowSteps) sessionRowSteps.textContent = '0';
       if (sessionRowCalories) sessionRowCalories.textContent = '0';
       if (sessionRowTime) sessionRowTime.textContent = '0m';
@@ -904,6 +984,14 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="meal-line"><span class="badge-icon ${index % 3 === 0 ? 'purple' : index % 3 === 1 ? 'orange' : 'teal'}">${meal.charAt(0)}</span><div><b>${name}</b><small>${portion}</small></div></div>
         </details>`).join('');
       dietResult.innerHTML = `<strong>Plan for ${calories} kcal</strong>${macroHtml}<div class="meal-list">${meals}</div>`;
+      const nutritionCalories = document.getElementById('nutrition-calories');
+      const nutritionProtein = document.getElementById('nutrition-protein');
+      const nutritionCarbs = document.getElementById('nutrition-carbs');
+      const nutritionFats = document.getElementById('nutrition-fats');
+      if (nutritionCalories) nutritionCalories.textContent = calories.toLocaleString('en-IN');
+      if (nutritionProtein) nutritionProtein.textContent = `${Math.round(calories * 0.28 / 4)}g`;
+      if (nutritionCarbs) nutritionCarbs.textContent = `${Math.round(calories * 0.45 / 4)}g`;
+      if (nutritionFats) nutritionFats.textContent = `${Math.round(calories * 0.27 / 9)}g`;
     });
   }
 
@@ -986,6 +1074,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authLogout) authLogout.hidden = true;
     const accountLabel = accountNav?.querySelector('span');
     if (accountLabel) accountLabel.textContent = 'Account';
+    profileText('home-live-label', 'Live today');
+    profileText('home-plan', 'No active plan');
+    profileText('home-plan-note', 'Sign in to sync membership');
+    profileText('membership-page-plan', 'No active plan');
+    profileText('membership-page-expiry', 'Sign in to view your membership');
+    profileText('membership-page-status', 'SIGNED OUT');
     updateAuthMode('login');
   };
 
@@ -1038,6 +1132,7 @@ document.addEventListener('DOMContentLoaded', () => {
     profileText('profile-role', (profile.role || 'member').toUpperCase());
     profileText('profile-avatar', initials);
     profileText('profile-avatar-large', initials);
+    profileText('home-live-label', `Welcome, ${name.split(/\s+/)[0]}`);
     const isAdmin = profile.role === 'admin';
     if (adminDashboardLink) adminDashboardLink.hidden = !isAdmin;
     if (profileAdminLink) profileAdminLink.hidden = !isAdmin;
@@ -1051,6 +1146,11 @@ document.addEventListener('DOMContentLoaded', () => {
     profileText('profile-plan-expiry', niceProfileDate(membership?.expires_on));
     profileText('profile-plan-amount', membership?.amount_inr ? `Rs ${Number(membership.amount_inr).toLocaleString('en-IN')}` : '--');
     profileText('profile-plan-note', membership ? 'Membership details are synced securely with the gym.' : 'Ask the gym admin to assign or activate your membership.');
+    profileText('home-plan', membership?.plan_name || 'No active plan');
+    profileText('home-plan-note', membership?.expires_on ? `Valid until ${niceProfileDate(membership.expires_on)}` : 'Choose a plan to unlock benefits');
+    profileText('membership-page-plan', membership?.plan_name || 'No active plan');
+    profileText('membership-page-expiry', membership?.expires_on ? `Valid until ${niceProfileDate(membership.expires_on)}` : 'Sign in or choose a membership');
+    profileText('membership-page-status', status === 'none' ? 'NONE' : status.toUpperCase());
     const badge = document.getElementById('profile-membership-status');
     if (badge) badge.dataset.status = status;
   };
@@ -1287,13 +1387,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isNativeApp || !notifications) return;
     await notifications.cancel({ notifications: [{ id: classReminderId(classId) }] });
   };
+  let activeClassFilter = 'all';
+  let latestClassSchedule = [];
   const renderClassSchedule = (classes) => {
     if (!classSchedule) return;
-    if (!classes.length) {
+    latestClassSchedule = Array.isArray(classes) ? classes : [];
+    const visibleClasses = activeClassFilter === 'all'
+      ? latestClassSchedule
+      : latestClassSchedule.filter((item) => String(item.category || '').toLowerCase() === activeClassFilter);
+    if (!visibleClasses.length) {
       classSchedule.innerHTML = '<div class="class-card"><h5>No upcoming classes</h5><p>New sessions will appear here when the gym publishes them.</p></div>';
       return;
     }
-    classSchedule.innerHTML = classes.map((item) => {
+    classSchedule.innerHTML = visibleClasses.map((item) => {
       const booked = Number(item.booked_count || 0);
       const capacity = Math.max(1, Number(item.capacity || 1));
       const seats = Math.max(0, capacity - booked);
@@ -1332,6 +1438,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   refreshClassesButton?.addEventListener('click', () => refreshClassSchedule());
+  document.querySelectorAll('[data-class-filter]').forEach((button) => button.addEventListener('click', () => {
+    activeClassFilter = button.dataset.classFilter || 'all';
+    document.querySelectorAll('[data-class-filter]').forEach((item) => item.classList.toggle('active', item === button));
+    if (!verifiedSessionUser) refreshClassSchedule(true);
+    else renderClassSchedule(latestClassSchedule);
+  }));
   classSchedule?.addEventListener('click', async (event) => {
     const loginButton = event.target.closest('[data-class-login]');
     if (loginButton) return showScreen('auth');
@@ -1403,7 +1515,7 @@ document.addEventListener('DOMContentLoaded', () => {
           name: user.user_metadata?.full_name || user.user_metadata?.name || '',
           email: user.email || ''
         },
-        theme: { color: '#ff4d2e' },
+        theme: { color: '#57d795' },
         retry: { enabled: false },
         handler: async (response) => {
           setPaymentBusy(true);

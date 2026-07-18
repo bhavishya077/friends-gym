@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 const files = [
   'index.html',
   'style.css',
+  'premium-theme.css',
   'script.js',
   'supabase-config.js',
   'supabase.min.js',
