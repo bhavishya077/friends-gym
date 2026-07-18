@@ -1,35 +1,36 @@
 {
-    "name":  "friends-gym-mobile-app",
-    "version":  "1.0.0",
-    "description":  "Installable mobile-first Friends Gym web application with member tools and JSON-backed APIs.",
-    "main":  "server.js",
-    "scripts":  {
-                    "start":  "node server.js",
-                    "dev":  "node server.js",
-                    "mobile:prepare":  "node scripts/build-mobile.mjs",
-                    "mobile:build":  "node scripts/build-mobile.mjs \u0026\u0026 cap sync android",
-                    "android:debug":  "pnpm mobile:build \u0026\u0026 cd android \u0026\u0026 gradlew.bat assembleDebug"
-                },
-    "keywords":  [
-                     "gym",
-                     "fitness",
-                     "pwa",
-                     "mobile-app"
-                 ],
-    "author":  "Friends Gym",
-    "license":  "MIT",
-    "engines":  {
-                    "node":  "\u003e=18"
-                },
-    "dependencies":  {
-                         "@capacitor/android":  "^8.4.2",
-                         "@capacitor/app":  "^8.1.0",
-                         "@capacitor/browser":  "^8.0.3",
-                         "@capacitor/core":  "^8.4.2",
-                         "nodemailer":  "^6.9.14"
-                     },
-    "private":  true,
-    "devDependencies":  {
-                            "@capacitor/cli":  "^8.4.2"
-                        }
+    "name": "friends-gym-mobile-app",
+    "version": "1.0.0",
+    "description": "Installable mobile-first Friends Gym web application with member tools and JSON-backed APIs.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js",
+        "mobile:prepare": "node scripts/build-mobile.mjs",
+        "mobile:build": "node scripts/build-mobile.mjs && cap sync android",
+        "android:debug": "pnpm mobile:build && cd android && gradlew.bat assembleDebug"
+    },
+    "keywords": [
+        "gym",
+        "fitness",
+        "pwa",
+        "mobile-app"
+    ],
+    "author": "Friends Gym",
+    "license": "MIT",
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@capacitor/android": "^8.4.2",
+        "@capacitor/app": "^8.1.0",
+        "@capacitor/browser": "^8.0.3",
+        "@capacitor/core": "^8.4.2",
+        "@capacitor/local-notifications": "8.2.0",
+        "nodemailer": "^6.9.14"
+    },
+    "private": true,
+    "devDependencies": {
+        "@capacitor/cli": "^8.4.2"
+    }
 }

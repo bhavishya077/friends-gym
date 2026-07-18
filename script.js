@@ -1234,6 +1234,59 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Number.isNaN(date.getTime())) return 'Schedule pending';
     return date.toLocaleString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   };
+  const classReminderId = (classId) => {
+    let hash = 17;
+    for (const character of String(classId || '')) hash = ((hash * 31) + character.charCodeAt(0)) | 0;
+    return Math.abs(hash || 1);
+  };
+  const classReminderTime = (startsAt) => {
+    const start = new Date(startsAt);
+    if (Number.isNaN(start.getTime()) || start.getTime() <= Date.now()) return null;
+    const oneHourBefore = start.getTime() - (60 * 60 * 1000);
+    return new Date(Math.max(oneHourBefore, Date.now() + 15 * 1000));
+  };
+  const scheduleClassReminder = async ({ id, title, startsAt }) => {
+    if (!isNativeApp) return { scheduled: false, message: 'Background reminder updated Android app mein available hai.' };
+    const notifications = window.Capacitor?.Plugins?.LocalNotifications;
+    if (!notifications) return { scheduled: false, message: 'Reminder ke liye updated Android app install karein.' };
+    const at = classReminderTime(startsAt);
+    if (!at) return { scheduled: false, message: 'Class time reminder ke liye valid nahi hai.' };
+    let permission = await notifications.checkPermissions();
+    if (permission.display !== 'granted') permission = await notifications.requestPermissions();
+    if (permission.display !== 'granted') return { scheduled: false, message: 'Class booked, lekin notification permission off hai.' };
+    if (window.Capacitor?.getPlatform?.() === 'android') {
+      await notifications.createChannel({
+        id: 'class-reminders',
+        name: 'Class reminders',
+        description: 'Friends Gym booked class reminders',
+        importance: 4,
+        visibility: 1,
+        vibration: true
+      });
+    }
+    const notificationId = classReminderId(id);
+    await notifications.cancel({ notifications: [{ id: notificationId }] });
+    await notifications.schedule({
+      notifications: [{
+        id: notificationId,
+        title: 'Your class starts soon',
+        body: `${title || 'Friends Gym class'} starts at ${classDateLabel(startsAt)}. Get ready!`,
+        schedule: { at },
+        channelId: 'class-reminders',
+        autoCancel: true,
+        extra: { classId: id }
+      }]
+    });
+    return {
+      scheduled: true,
+      message: `Reminder ${at.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })} ke liye set hai.`
+    };
+  };
+  const cancelClassReminder = async (classId) => {
+    const notifications = window.Capacitor?.Plugins?.LocalNotifications;
+    if (!isNativeApp || !notifications) return;
+    await notifications.cancel({ notifications: [{ id: classReminderId(classId) }] });
+  };
   const renderClassSchedule = (classes) => {
     if (!classSchedule) return;
     if (!classes.length) {
@@ -1252,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <h5>${escapeClassText(item.title)}</h5>
         <p>${escapeClassText(item.description || 'Coach-led Friends Gym class.')}</p>
         <div class="class-meta"><span><b>${Number(item.duration_minutes) || 45} min</b></span><span><b>${escapeClassText(item.level || 'All levels')}</b></span><span><b>${escapeClassText(item.trainer_name || 'Friends Gym Coach')}</b></span></div>
-        <div class="class-seat-row"><span>${isBooked ? 'Your seat is confirmed' : `${seats} of ${capacity} seats left`}</span><button class="class-book-button ${isBooked ? 'cancel' : ''}" type="button" data-class-id="${escapeClassText(item.id)}" data-class-action="${isBooked ? 'cancel' : 'book'}" ${isFull ? 'disabled' : ''}>${isBooked ? 'Cancel booking' : (isFull ? 'Class full' : 'Book class')}</button></div>
+        <div class="class-seat-row"><span>${isBooked ? 'Your seat is confirmed' : `${seats} of ${capacity} seats left`}</span><button class="class-book-button ${isBooked ? 'cancel' : ''}" type="button" data-class-id="${escapeClassText(item.id)}" data-class-title="${escapeClassText(item.title)}" data-class-start="${escapeClassText(item.starts_at)}" data-class-action="${isBooked ? 'cancel' : 'book'}" ${isFull ? 'disabled' : ''}>${isBooked ? 'Cancel booking' : (isFull ? 'Class full' : 'Book class')}</button></div>
       </article>`;
     }).join('');
   };
@@ -1291,7 +1344,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const rpcName = action === 'cancel' ? 'cancel_class_booking' : 'book_class';
       const { error } = await client.rpc(rpcName, { target_class_id: button.dataset.classId });
       if (error) throw error;
-      if (classBookingStatus) classBookingStatus.textContent = action === 'cancel' ? 'Class booking cancelled.' : 'Class booked! Your seat is confirmed.';
+      if (action === 'cancel') {
+        await cancelClassReminder(button.dataset.classId).catch(() => {});
+        if (classBookingStatus) classBookingStatus.textContent = 'Class booking aur reminder cancel ho gaye.';
+      } else {
+        const reminder = await scheduleClassReminder({
+          id: button.dataset.classId,
+          title: button.dataset.classTitle,
+          startsAt: button.dataset.classStart
+        }).catch(() => ({ scheduled: false, message: 'Class booked, lekin reminder set nahi ho saka.' }));
+        if (classBookingStatus) classBookingStatus.textContent = `Class booked! ${reminder.message}`;
+      }
       await refreshClassSchedule(true);
     } catch (error) {
       if (classBookingStatus) classBookingStatus.textContent = error.message || 'Booking could not be updated.';
