@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     '/tools': 'tools',
     '/auth': 'auth',
     '/profile': 'profile',
+    '/progress': 'progress',
     '/settings': 'settings',
     '/contact': 'contact'
   };
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const showScreen = (screenId, options = {}) => {
     const { push = true, remember = true } = options;
-    if (['profile', 'settings'].includes(screenId) && !verifiedSessionUser) screenId = 'auth';
+    if (['profile', 'progress', 'settings'].includes(screenId) && !verifiedSessionUser) screenId = 'auth';
     const target = document.getElementById(screenId);
     if (!target || !target.classList.contains('screen')) return;
     setDrawerOpen(false);
@@ -1187,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (accountNav) accountNav.dataset.screen = 'profile';
     const signedInRoute = routeToScreen[window.location.pathname];
     if (redirect || window.location.pathname === '/auth') showScreen('home');
-    else if (['profile', 'settings'].includes(signedInRoute)) showScreen(signedInRoute, { push: false, remember: false });
+    else if (['profile', 'progress', 'settings'].includes(signedInRoute)) showScreen(signedInRoute, { push: false, remember: false });
   };
   const logoutMember = async () => {
     const client = await getSupabaseClient();
@@ -1210,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!client) {
         resetLoggedOutUi();
         authMessage.textContent = 'Secure login is temporarily unavailable. Please try again later.';
-        if (window.location.pathname === '/profile') showScreen('auth');
+        if (['/profile', '/progress', '/settings'].includes(window.location.pathname)) showScreen('auth');
         return;
       }
       const { data, error } = await client.auth.getSession();
@@ -1223,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authMessage.textContent = 'You are securely signed in. Logout before using another account on this device.';
       } else {
         resetLoggedOutUi();
-        if (window.location.pathname === '/profile') showScreen('auth');
+        if (['/profile', '/progress', '/settings'].includes(window.location.pathname)) showScreen('auth');
       }
       client.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
@@ -1232,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event === 'SIGNED_OUT') {
           setTimeout(() => {
             resetLoggedOutUi();
-            if (document.getElementById('profile')?.classList.contains('active')) showScreen('auth');
+            if (document.getElementById('profile')?.classList.contains('active') || document.getElementById('progress')?.classList.contains('active') || document.getElementById('settings')?.classList.contains('active')) showScreen('auth');
           }, 0);
         }
       });

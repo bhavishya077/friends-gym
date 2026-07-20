@@ -333,9 +333,9 @@ function getContentType(filePath) {
   }
 }
 
-const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/settings', '/contact']);
+const APP_ROUTES = new Set(['/', '/workout', '/nutrition', '/classes', '/membership', '/tools', '/auth', '/profile', '/progress', '/settings', '/contact']);
 const PUBLIC_FILES = new Set([
-  '/index.html', '/style.css', '/premium-theme.css', '/experience.css', '/member-plans.css', '/script.js', '/experience.js', '/member-plans.js', '/qrcode.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
+  '/index.html', '/style.css', '/premium-theme.css', '/experience.css', '/member-plans.css', '/progress.css', '/script.js', '/experience.js', '/member-plans.js', '/progress.js', '/qrcode.js', '/supabase.min.js', '/supabase-config.js', '/manifest.webmanifest', '/service-worker.js',
   '/admin.html', '/admin.css', '/admin-plans.css', '/admin.js', '/admin-plans.js', '/about.html', '/contact.html', '/pricing.html', '/programs.html', '/privacy.html',
   '/pexels-arturo-eg-22214041-6628962.jpg', '/pexels-warrecreates-32233887.jpg'
 ]);
