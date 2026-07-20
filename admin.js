@@ -32,7 +32,7 @@
     const filtered = members.filter((member) => `${member.full_name || ''} ${member.phone || ''}`.toLowerCase().includes(q));
     document.getElementById('member-list').innerHTML = filtered.length ? filtered.map((member) => {
       const plan = memberships.find((item) => item.member_id === member.id);
-      return `<article class="record"><div class="avatar">${escapeHtml(memberName(member).charAt(0).toUpperCase())}</div><div><strong>${escapeHtml(memberName(member))}</strong><span>${escapeHtml(member.phone || 'Phone not added')}</span></div><div class="state ${escapeHtml(plan?.status || '')}"><b>${escapeHtml(plan?.plan_name || 'No plan')}</b><span>${plan ? niceDate(plan.expires_on) : 'Not active'}</span></div></article>`;
+      return `<article class="record member-directory-row" data-member-id="${escapeHtml(member.id)}"><div class="avatar">${escapeHtml(memberName(member).charAt(0).toUpperCase())}</div><div><strong>${escapeHtml(memberName(member))}</strong><span>${escapeHtml(member.phone || 'Phone not added')}</span></div><div class="state ${escapeHtml(plan?.status || '')}"><b>${escapeHtml(plan?.plan_name || 'No plan')}</b><span>${plan ? niceDate(plan.expires_on) : 'Not active'}</span></div><button class="member-detail-open" type="button" data-open-member="${escapeHtml(member.id)}">View</button></article>`;
     }).join('') : '<p class="empty">No matching members.</p>';
     const options = members.map((member) => `<option value="${escapeHtml(member.id)}">${escapeHtml(memberName(member))}</option>`).join('');
     ['membership-member', 'attendance-member'].forEach((id) => {

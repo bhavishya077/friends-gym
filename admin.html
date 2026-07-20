@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="admin.css?v=6" />
+  <link rel="stylesheet" href="admin.css?v=7" />
+  <link rel="stylesheet" href="admin-plans.css?v=1" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=23"></script>
 </head>
@@ -44,6 +45,17 @@
         <div id="class-roster" class="records"><p class="empty">Select a class to view members.</p></div>
       </section>
 
+      <section id="member-detail-card" class="card member-detail-card" hidden>
+        <div class="section-title"><div><span>MEMBER 360</span><h2>Member detail dashboard</h2></div><button id="close-member-detail" type="button">Close</button></div>
+        <div class="member-detail-identity"><div id="detail-member-avatar" class="member-detail-avatar">M</div><div><strong id="detail-member-name">Member</strong><span id="detail-member-meta">Loading secure profile...</span></div><code id="detail-member-id">FG-PENDING</code></div>
+        <div class="member-detail-metrics"><article><strong id="detail-visits">0</strong><span>Gym visits</span><small id="detail-last-visit">No visits</small></article><article><strong id="detail-steps">0</strong><span>Total steps</span><small>Activity sync</small></article><article><strong id="detail-calories">0</strong><span>Calories</span><small>Burned</small></article><article><strong id="detail-minutes">0</strong><span>Workout</span><small>Minutes</small></article><article><strong id="detail-weight">--</strong><span>Latest weight</span><small>Body progress</small></article></div>
+        <div class="member-detail-membership"><div><strong id="detail-membership">No plan</strong><span id="detail-membership-note">Membership not assigned</span></div><button id="detail-edit-membership" type="button">Edit membership</button></div>
+        <div class="plan-assignment-grid">
+          <form id="workout-plan-form" class="plan-editor"><h3>Trainer workout plan</h3><p class="helper">One exercise per line: Exercise | Sets | Reps | Rest seconds | Note</p><input id="workout-plan-title" maxlength="100" placeholder="Example: 4-Day Strength Plan" required /><textarea id="workout-plan-lines" rows="6" placeholder="Squat | 3 | 12 | 60 | Keep chest tall&#10;Push-up | 3 | 10 | 45 | Controlled reps" required></textarea><button class="primary" type="submit">Assign workout plan</button><div id="admin-current-workout" class="assigned-plan-preview"><p class="empty">No workout plan assigned.</p></div></form>
+          <form id="diet-plan-form" class="plan-editor"><h3>Trainer diet plan</h3><p class="helper">One meal per line: Meal | Food items</p><input id="diet-plan-title" maxlength="100" placeholder="Example: High Protein Daily Plan" required /><input id="diet-plan-calories" type="number" min="800" max="6000" placeholder="Daily calories" required /><textarea id="diet-plan-lines" rows="6" placeholder="Breakfast | Oats, milk, banana and eggs&#10;Lunch | Roti, dal, rice, salad and curd" required></textarea><button class="primary" type="submit">Assign diet plan</button><div id="admin-current-diet" class="assigned-plan-preview"><p class="empty">No diet plan assigned.</p></div></form>
+        </div>
+        <p id="member-detail-status" class="result-box member-detail-status" role="status" aria-live="polite">Select a member from the directory.</p>
+      </section>
       <div class="admin-grid">
         <section class="card"><div class="section-title"><div><span>DIRECTORY</span><h2>Members</h2></div><button id="refresh" type="button">Refresh</button></div><input id="member-search" type="search" placeholder="Search member name or phone" /><div id="member-list" class="records"><p class="empty">Loading members...</p></div></section>
         <section class="card"><div class="section-title"><div><span>MEMBERSHIP</span><h2>Assign plan</h2></div></div><form id="membership-form"><select id="membership-member" required><option value="">Select member</option></select><div class="grid"><select id="plan" required><option>Standard</option><option>All-In</option><option>Drop-In</option></select><select id="status" required><option value="active">Active</option><option value="pending">Pending</option><option value="paused">Paused</option><option value="expired">Expired</option><option value="cancelled">Cancelled</option></select></div><div class="grid"><label>Start date<input id="starts" type="date" required /></label><label>Expiry date<input id="expires" type="date" required /></label></div><input id="amount" type="number" min="0" step="1" placeholder="Amount paid (INR)" required /><button class="primary" type="submit">Save membership</button></form></section>
@@ -52,6 +64,7 @@
       <p id="message" class="message" role="status" aria-live="polite">Connected securely to Supabase.</p>
     </div>
   </main>
-  <script src="admin.js?v=6"></script>
+  <script src="admin.js?v=7"></script>
+  <script src="admin-plans.js?v=1"></script>
 </body>
 </html>
